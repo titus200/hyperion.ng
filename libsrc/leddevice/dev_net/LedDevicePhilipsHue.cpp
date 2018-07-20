@@ -173,7 +173,24 @@ void PhilipsHueBridge::resolveReply(QNetworkReply* reply)
 				return;
 			}
 
-			QJsonObject obj = doc.object()["lights"].toObject();
+			QJsonObject obj = doc.object()["groups"].toObject();
+
+			if(obj.isEmpty())
+			{
+				Error(log, "Bridge has no registered groups");
+				return;
+			}
+
+			// get all available group ids and their values
+			QStringList keys = obj.keys();
+			QMap<quint16,QJsonObject> map;
+			for (int i = 0; i < keys.size(); ++i)
+			{
+				map.insert(keys.at(i).toInt(), obj.take(keys.at(i)).toObject());
+			}
+			emit newGroups(map);
+
+			obj = doc.object()["lights"].toObject();
 
 			if(obj.isEmpty())
 			{
@@ -182,8 +199,8 @@ void PhilipsHueBridge::resolveReply(QNetworkReply* reply)
 			}
 
 			// get all available light ids and their values
-			QStringList keys = obj.keys();
-			QMap<quint16,QJsonObject> map;
+			keys = obj.keys();
+			map.clear();
 			for (int i = 0; i < keys.size(); ++i)
 			{
 				map.insert(keys.at(i).toInt(), obj.take(keys.at(i)).toObject());
@@ -293,6 +310,11 @@ PhilipsHueLight::~PhilipsHueLight()
 {
 	// Restore the original state.
 	set(originalState);
+}
+
+int PhilipsHueLight::getId() const
+{
+    return id;
 }
 
 void PhilipsHueLight::set(QString state)

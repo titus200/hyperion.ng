@@ -120,6 +120,10 @@ signals:
 	///	Emits with a QMap of current bridge light/value pairs
 	///
 	void newLights(QMap<quint16,QJsonObject> map);
+    ///
+    ///	Emits with a QMap of current bridge light/value pairs
+    ///
+    void newGroups(QMap<quint16,QJsonObject> map);
 
 public:
 	PhilipsHueBridge(Logger* log, QString host, QString username);
@@ -175,6 +179,7 @@ public:
 	PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned int id, QJsonObject values);
 	~PhilipsHueLight();
 
+	int getId() const;
 	///
 	/// @param on
 	///
