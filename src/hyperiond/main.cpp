@@ -315,7 +315,8 @@ int main(int argc, char** argv)
 		prctl(PR_SET_PDEATHSIG, SIGHUP);
 #endif
 	}
-
+	
+	int rc = 1;
 	for(size_t idx=0; idx < configFiles.size(); idx++) {
 		HyperionDaemon* hyperiond = nullptr;
 		try
@@ -328,7 +329,7 @@ int main(int argc, char** argv)
 			Error(log, "Hyperion Daemon aborted:\n  %s", e.what());
 		}
 
-		int rc = 1;
+		
 		WebConfig* webConfig = nullptr;
 		try
 		{
@@ -356,9 +357,6 @@ int main(int argc, char** argv)
 		delete webConfig;
 		delete hyperiond;
 	}
-
-	
 	Logger::deleteInstance();
-
 	return rc;
 }
