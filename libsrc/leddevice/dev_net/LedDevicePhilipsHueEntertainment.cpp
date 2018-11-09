@@ -221,7 +221,7 @@ void HueEntertainmentWorker::run() {
 
     if ((ret = mbedtls_ssl_set_hostname(&ssl, "Hue")) != 0)
     {
-        qCritical("mbedtls_ssl_set_hostname FAILED", ret);
+        qCritical("mbedtls_ssl_set_hostname FAILED %d", ret);
     }
 
     mbedtls_ssl_set_bio(&ssl, &server_fd,
