@@ -257,14 +257,16 @@ int main(int argc, char** argv)
 	QDir().mkpath(rootPath+"/config");
 	if (configFiles.size() > 0)
 	{
-		// use argument config file
-		// check if file has a path and ends with .json
-		if(configFiles[0].contains("/"))
-			throw std::runtime_error("Don't provide a path to config file, just a config name is allowed!");
-		if(!configFiles[0].endsWith(".json"))
-			configFiles[0].append(".json");
+		for(size_t idx=0; idx < configFiles.size(); idx++) {
+			// use argument config file
+			// check if file has a path and ends with .json
+			if(configFiles[idx0].contains("/"))
+				throw std::runtime_error("Don't provide a path to config file, just a config name is allowed!");
+			if(!configFiles[idx].endsWith(".json"))
+				configFiles[idx].append(".json");
 
-		configFiles.prepend(cPath+"/"+configFiles[0]);
+			configFiles.prepend(cPath+"/"+configFiles[idx]);
+		}
 	}
 	else
 	{
@@ -314,41 +316,42 @@ int main(int argc, char** argv)
 #endif
 	}
 
-
-	HyperionDaemon* hyperiond = nullptr;
-	try
-	{
-		hyperiond = new HyperionDaemon(configFiles[0], rootPath, qApp);
-		hyperiond->run();
-	}
-	catch (std::exception& e)
-	{
-		Error(log, "Hyperion Daemon aborted:\n  %s", e.what());
-	}
-
-	int rc = 1;
-	WebConfig* webConfig = nullptr;
-	try
-	{
-		webConfig = new WebConfig(qApp);
-		// run the application
-		if (isGuiApp)
+	for(size_t idx=0; idx < configFiles.size(); idx++) {
+		HyperionDaemon* hyperiond = nullptr;
+		try
 		{
-			Info(log, "start systray");
-			QApplication::setQuitOnLastWindowClosed(false);
-			SysTray tray(hyperiond, webConfig->getPort());
-			tray.hide();
-			rc = (qobject_cast<QApplication *>(app.data()))->exec();
+			hyperiond = new HyperionDaemon(configFiles[idx], rootPath, qApp);
+			hyperiond->run();
 		}
-		else
+		catch (std::exception& e)
 		{
-			rc = app->exec();
+			Error(log, "Hyperion Daemon aborted:\n  %s", e.what());
 		}
-		Info(log, "Application closed with code %d", rc);
-	}
-	catch (std::exception& e)
-	{
-		Error(log, "Hyperion aborted:\n  %s", e.what());
+
+		int rc = 1;
+		WebConfig* webConfig = nullptr;
+		try
+		{
+			webConfig = new WebConfig(qApp);
+			// run the application
+			if (isGuiApp)
+			{
+				Info(log, "start systray");
+				QApplication::setQuitOnLastWindowClosed(false);
+				SysTray tray(hyperiond, webConfig->getPort());
+				tray.hide();
+				rc = (qobject_cast<QApplication *>(app.data()))->exec();
+			}
+			else
+			{
+				rc = app->exec();
+			}
+			Info(log, "Application closed with code %d", rc);
+		}
+		catch (std::exception& e)
+		{
+			Error(log, "Hyperion aborted:\n  %s", e.what());
+		}
 	}
 
 	// delete components
