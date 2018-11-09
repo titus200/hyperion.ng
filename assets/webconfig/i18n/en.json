@@ -396,6 +396,8 @@
 	"edt_dev_spec_gpioBcm_title" : "GPIO Pin",
 	"edt_dev_spec_ledIndex_title" : "LED index",
 	"edt_dev_spec_colorComponent_title" : "Color component",
+	"edt_dev_spec_clientKey_title" : "Client Key",
+	"edt_dev_spec_groupId_title" : "Group Id",
 	"edt_conf_general_enable_title" : "Activate",
 	"edt_conf_general_enable_expl" : "If checked, the component is enabled.",
 	"edt_conf_general_priority_title" : "Priority channel",

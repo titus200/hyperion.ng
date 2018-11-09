@@ -254,8 +254,9 @@ IF ( "${Qt5Core_VERSION}" VERSION_LESS "${QT_MIN_VERSION}" )
 ENDIF()
 
 
-# Add libusb and pthreads
+# Add libusb,Mbedtls and pthreads
 find_package(libusb-1.0 REQUIRED)
+find_package(MbedTLS REQUIRED)
 find_package(Threads REQUIRED)
 add_definitions(${QT_DEFINITIONS})
 

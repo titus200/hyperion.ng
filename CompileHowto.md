@@ -4,7 +4,7 @@
 
 ```
 sudo apt-get update
-sudo apt-get install git cmake build-essential qtbase5-dev libqt5serialport5-dev libusb-1.0-0-dev python3-dev libxrender-dev libavahi-core-dev libavahi-compat-libdnssd-dev
+sudo apt-get install git cmake build-essential qtbase5-dev libqt5serialport5-dev libusb-1.0-0-dev python3-dev libxrender-dev libavahi-core-dev libavahi-compat-libdnssd-dev libmbedtls-dev
 ```
 ### Ubuntu 14.04 specific
 You need a newer version of cmake (minimum 3.0.0). Install it from the ppa or website

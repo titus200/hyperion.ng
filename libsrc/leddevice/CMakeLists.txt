@@ -81,6 +81,7 @@ target_link_libraries(leddevice
 	${CMAKE_THREAD_LIBS_INIT}
 	Qt5::Network
 	Qt5::SerialPort
+    ${MBEDTLS_LIBRARIES}
 )
 
 if(ENABLE_TINKERFORGE)
