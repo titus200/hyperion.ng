@@ -260,7 +260,7 @@ int main(int argc, char** argv)
 		for(size_t idx=0; idx < configFiles.size(); idx++) {
 			// use argument config file
 			// check if file has a path and ends with .json
-			if(configFiles[idx0].contains("/"))
+			if(configFiles[idx].contains("/"))
 				throw std::runtime_error("Don't provide a path to config file, just a config name is allowed!");
 			if(!configFiles[idx].endsWith(".json"))
 				configFiles[idx].append(".json");
@@ -352,11 +352,12 @@ int main(int argc, char** argv)
 		{
 			Error(log, "Hyperion aborted:\n  %s", e.what());
 		}
+		// delete components
+		delete webConfig;
+		delete hyperiond;
 	}
 
-	// delete components
-	delete webConfig;
-	delete hyperiond;
+	
 	Logger::deleteInstance();
 
 	return rc;
