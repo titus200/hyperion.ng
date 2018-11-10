@@ -191,7 +191,7 @@ void HueEntertainmentWorker::run() {
     * 1. Start the connection
     */
     
-    qDebug() << "Connecting to udp" << address << SERVER_PORT;
+    qDebug() << "Connecting to udp" << output << SERVER_PORT;
 
     if ((ret = mbedtls_net_connect(&server_fd, output.toUtf8(), SERVER_PORT, MBEDTLS_NET_PROTO_UDP)) != 0) {
         qCritical() << "mbedtls_net_connect FAILED" << ret;
@@ -302,17 +302,17 @@ send_request:
 
         QByteArray Msg;
 
-        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * lights.size());
+        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) *  PhilipsHueLight& lamp.size());
         Msg.append((char*)HEADER, sizeof(HEADER));
 
-        unsigned int idx = 0;
+        //unsigned int idx = 0;
         for (const PhilipsHueLight& lamp : *lights) {
             quint64 R = lamp.getColor().x * 0xffff;
             quint64 G = lamp.getColor().y * 0xffff;
             quint64 B = lamp.getColor().bri * 0xffff;
 
             const uint8_t payload[] = {
-                0x00, 0x00, ((uint8_t)lamp.getId().toInt()),
+                0x00, 0x00, ((uint8_t)lamp.id.toInt()),
                 static_cast<uint8_t>((R >> 8) & 0xff), static_cast<uint8_t>(R & 0xff),
                 static_cast<uint8_t>((G >> 8) & 0xff), static_cast<uint8_t>(G & 0xff),
                 static_cast<uint8_t>((B >> 8) & 0xff), static_cast<uint8_t>(B & 0xff)
