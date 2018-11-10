@@ -1,5 +1,4 @@
-//hyperion
-#include "LedDevicePhilipsHueEntertainment.h"
+include "LedDevicePhilipsHueEntertainment.h"
 
 // Qt includes
 #include <QDebug>
@@ -302,8 +301,7 @@ send_request:
 
         QByteArray Msg;
 
-        unsigned int lsize = *lights;
-        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * lsize.size());
+        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * lights.size());
         Msg.append((char*)HEADER, sizeof(HEADER));
 
         //unsigned int idx = 0;
