@@ -302,7 +302,8 @@ send_request:
 
         QByteArray Msg;
 
-        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) *  PhilipsHueLight& lights.size());
+        unsigned int lsize = *lights;
+        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * lsize.size());
         Msg.append((char*)HEADER, sizeof(HEADER));
 
         //unsigned int idx = 0;
