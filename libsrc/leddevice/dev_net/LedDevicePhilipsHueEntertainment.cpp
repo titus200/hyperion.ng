@@ -301,6 +301,8 @@ send_request:
 
         QByteArray Msg;
 
+        qDebug() << "Msg reserve: all: " << (sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (lights->size())) << ", header: " << sizeof(HEADER) << ", payload: " << sizeof(PAYLOAD_PER_LIGHT) << ", lights: " << (lights->size());
+
         Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (lights->size()));
         Msg.append((char*)HEADER, sizeof(HEADER));
 
