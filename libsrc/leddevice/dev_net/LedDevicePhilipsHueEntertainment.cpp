@@ -301,7 +301,7 @@ send_request:
 
         QByteArray Msg;
 
-        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * lights.size());
+        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * *lights.size());
         Msg.append((char*)HEADER, sizeof(HEADER));
 
         //unsigned int idx = 0;
