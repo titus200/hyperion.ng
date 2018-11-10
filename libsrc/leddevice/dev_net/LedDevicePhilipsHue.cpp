@@ -4,6 +4,7 @@
 // qt includes
 #include <QtCore/qmath.h>
 #include <QNetworkReply>
+#include <QDebug>
 
 bool operator ==(CiColor p1, CiColor p2)
 {
@@ -25,6 +26,23 @@ CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangl
 	float X = r * 0.664511f + g * 0.154324f + b * 0.162028f;
 	float Y = r * 0.283881f + g * 0.668433f + b * 0.047685f;
 	float Z = r * 0.000088f + g * 0.072310f + b * 0.986039f;
+
+	float bri = fmax(fmax(red, green), blue);
+	float bri2 = fmax(fmax(r, g), b);
+
+	float min1 = fmin(fmin(r, g), b);
+	float max1 = fmax(fmax(r, g), b);
+	float L1 = (max1 + min1) / 2;
+
+	float min2 = fmin(fmin(red, green), blue);
+	float max2 = fmax(fmax(red, green), blue);
+	float L2 = (max2 + min2) / 2;
+
+	qDebug() << "red:" << red << ", green: " << green << ", blue: " << blue;
+	qDebug() << "r:" << r << ", g: " << g << ", b: " << b;
+	qDebug() << "bri:" << bri << ", bri2: " << bri2;
+	qDebug() << "L1:" << L1 << ", L2: " << L2;
+
 	// Convert to x,y space.
 	float cx = X / (X + Y + Z);
 	float cy = Y / (X + Y + Z);
@@ -37,7 +55,8 @@ CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangl
 		cy = 0.0f;
 	}
 	// RGB to HSV Convertion for Brightness Value, not XYZ Space.
-	float bri = fmax(fmax(red, green), blue);
+	//float bri = fmax(fmax(red, green), blue);
+
 	CiColor xy =
 	{ cx, cy, bri };
 	// Check if the given XY value is within the color reach of our lamps.
