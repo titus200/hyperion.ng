@@ -1,4 +1,4 @@
-include "LedDevicePhilipsHueEntertainment.h"
+#include "LedDevicePhilipsHueEntertainment.h"
 
 // Qt includes
 #include <QDebug>
