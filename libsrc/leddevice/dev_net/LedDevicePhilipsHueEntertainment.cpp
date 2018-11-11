@@ -291,7 +291,18 @@ void HueEntertainmentWorker::run() {
     }
 
     qDebug() << "Handshake successful. Connected!";
+    
+    /*
+     * 5. Verify the server certificate
+     */
+    mbedtls_printf( "  . Verifying peer X.509 certificate..." );
 
+    if((flags = mbedtls_ssl_get_verify_result(&ssl))!= 0) {
+        char vrfy_buf[512];
+        mbedtls_printf(" failed\n");
+        mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "  ! ", flags);
+        mbedtls_printf("%s\n", vrfy_buf);
+    }
 
     /*
     * 6. Send messages repeatedly until we lose connection or are told to stop
