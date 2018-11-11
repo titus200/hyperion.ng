@@ -337,7 +337,7 @@ send_request:
 
         QByteArray Msg;
         eMutex.lock();
-        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (lights->size()));
+        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (*lights->size()));
         Msg.append((char*)HEADER, sizeof(HEADER));
         
         for (const PhilipsHueLight& lamp : *lights) {
@@ -358,10 +358,17 @@ send_request:
         //len = Msg.size();
         qDebug() << "mbedtls_ssl_write Msg.size: " <<  Msg.size();
         //qDebug() << "Msg: " << (unsigned char *)Msg.data();
+        (unsigned char *) cMsg, dMsg; 
         do {
-            len = Msg.size();
-            ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
-            qDebug() << "mbedtls_ssl_write inside dowhile Msg.size: " << len;
+            dMsg = Msg.data();
+            if(cMsg != dMsg) {
+                cMsg = dMsg;
+                len = Msg.size();
+                ret = mbedtls_ssl_write(&ssl, dMsg, len);
+                qDebug() << "mbedtls_ssl_write inside do-while Msg.size: " << len;
+            }else{
+                ret = MBEDTLS_ERR_SSL_WANT_READ;
+            }
         } while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
         if(ret < 0){
