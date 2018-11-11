@@ -301,43 +301,40 @@ void HueEntertainmentWorker::run() {
     * 6. Send messages repeatedly until we lose connection or are told to stop
     */
 send_request:
-    /*
-    char header[] = {
+    while (true)
+    {
+        static const uint8_t HEADER[] = {
             'H', 'u', 'e', 'S', 't', 'r', 'e', 'a', 'm', //protocol
+
             0x01, 0x00, //version 1.0
+
             0x01, //sequence number 1
-            0x00, 0x00, //reserved
-            0x01, //color mode XY
-            0x00, //linear filter
-    };
-    */
-    static const uint8_t HEADER[] = {
-        'H', 'u', 'e', 'S', 't', 'r', 'e', 'a', 'm', //protocol
-        0x01, 0x00, //version 1.0
-        0x01, //sequence number 1
-        0x00, 0x00, //Reserved write 0’s
-        0x01,
-        0x00, // Reserved, write 0’s
-    };
 
-    static const uint8_t PAYLOAD_PER_LIGHT[] = {
-        0x01, 0x00, 0x06, //light ID
-        //color: 16 bpc
-        0xff, 0xff,
-        0xff, 0xff,
-        0xff, 0xff,
-        /*
-        (message.R >> 8) & 0xff, message.R & 0xff,
-        (message.G >> 8) & 0xff, message.G & 0xff,
-        (message.B >> 8) & 0xff, message.B & 0xff
-        */
-    };
+            0x00, 0x00, //Reserved write 0’s
 
-    while (1) {
+            0x01,
+
+            0x00, // Reserved, write 0’s
+        };
+
+        static const uint8_t PAYLOAD_PER_LIGHT[] =
+        {
+            0x01, 0x00, 0x06, //light ID
+
+                              //color: 16 bpc
+                              0xff, 0xff,
+                              0xff, 0xff,
+                              0xff, 0xff,
+                              /*
+                              (message.R >> 8) & 0xff, message.R & 0xff,
+                              (message.G >> 8) & 0xff, message.G & 0xff,
+                              (message.B >> 8) & 0xff, message.B & 0xff
+                              */
+        };
 
         QByteArray Msg;
         eMutex.lock();
-        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (lights->size()));
+        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * lights->size());
         Msg.append((char*)HEADER, sizeof(HEADER));
         
         for (const PhilipsHueLight& lamp : *lights) {
@@ -364,7 +361,7 @@ send_request:
             //goto exit;
         }        
         //Bridge send max 25Hz / sec = 1000ms / 25 = 40sm mslepp
-        //QThread::msleep(40);
+        QThread::msleep(40);
     }
 
     /*
