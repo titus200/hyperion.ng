@@ -310,14 +310,16 @@ send_request:
             quint64 B = lamp.getColor().bri * 0xffff;
 
             unsigned int id = lamp.getId();
+            unsigned int idx = 0;
+            qDebug() << "Light idx " << idx << ", ID: " << id;
             const uint8_t payload[] = {
                 0x00, 0x00, ((uint8_t)id),
                 static_cast<uint8_t>((R >> 8) & 0xff), static_cast<uint8_t>(R & 0xff),
                 static_cast<uint8_t>((G >> 8) & 0xff), static_cast<uint8_t>(G & 0xff),
                 static_cast<uint8_t>((B >> 8) & 0xff), static_cast<uint8_t>(B & 0xff)
             };
-
             Msg.append((char*)payload, sizeof(payload));
+            idx++;
         }
 
         int len = Msg.size();
