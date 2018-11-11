@@ -166,7 +166,7 @@ void HueEntertainmentWorker::run() {
     int ret, len;
     mbedtls_net_context server_fd;
     uint32_t flags;
-    unsigned char buf[1024];
+    //unsigned char buf[1024];
     const char *pers = "dtls_client";
     int retry_left = MAX_RETRY;
 
