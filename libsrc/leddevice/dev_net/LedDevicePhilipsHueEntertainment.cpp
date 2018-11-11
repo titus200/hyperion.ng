@@ -159,7 +159,7 @@ void HueEntertainmentWorker::run() {
 
 #define READ_TIMEOUT_MS 1000
 #define MAX_RETRY 5
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 4
 #define SERVER_PORT "2100"
 #define SERVER_NAME "Hue"
 
@@ -258,7 +258,7 @@ void HueEntertainmentWorker::run() {
 
     mbedtls_ssl_set_bio(&ssl, &server_fd, mbedtls_net_send, mbedtls_net_recv, mbedtls_net_recv_timeout);
     mbedtls_ssl_set_timer_cb(&ssl, &timer, mbedtls_timing_set_delay, mbedtls_timing_get_delay);
-    mbedtls_ssl_conf_handshake_timeout(&conf, 500, 10000);
+    
 
     /*
     * 4. Handshake
@@ -266,31 +266,23 @@ void HueEntertainmentWorker::run() {
 
     qDebug() << "Performing the DTLS handshake...";
 
-    //for (int attempt = 0; attempt < 4; ++attempt) {
-    //qDebug() << "handshake attempt" << attempt;
-    //mbedtls_ssl_conf_handshake_timeout(&conf, 400, 5000);
-   
-    do ret = mbedtls_ssl_handshake(&ssl);
-    while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
-    
+    for (int attempt = 0; attempt < 6; ++attempt) {
+        qDebug() << "handshake attempt" << attempt;
+        //mbedtls_ssl_conf_handshake_timeout(&conf, 400, 5000);
+        mbedtls_ssl_conf_handshake_timeout(&conf, 500, 2500);
+        do ret = mbedtls_ssl_handshake(&ssl);
+        while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+        if (ret == 0) break;
+        msleep(200);
+    }
+
+    qDebug() << "handshake result" << ret;
+
     if( ret != 0 ) {
         mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
         goto exit;
     }
-
-    //if (ret == 0)
-    //      break;
-    //    msleep(200);
-    //}
-
-    qDebug() << "handshake result" << ret;
-
-    /*
-    if (ret != 0) {
-        qCritical() << "mbedtls_ssl_handshake FAILED" << ret;
-        goto exit;
-    }
-    */
+    
     qDebug() << "Handshake successful. Connected!";
     
     /*
