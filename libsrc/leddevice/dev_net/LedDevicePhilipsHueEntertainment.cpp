@@ -326,7 +326,8 @@ send_request:
         if(ret < 0) {
             break;
         }
-        QThread::msleep(30);
+        //Bridge send max 25Hz / sec = 1000ms / 25 = 40sm mslepp
+        QThread::msleep(40);
     }
 
     if (ret < 0) {
