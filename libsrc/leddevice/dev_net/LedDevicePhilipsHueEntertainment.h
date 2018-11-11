@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QThread>
 #include <QJsonObject>
+#include <QMutex>
 
 // Leddevice includes
 #include <leddevice/LedDevice.h>
