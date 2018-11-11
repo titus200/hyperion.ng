@@ -75,7 +75,7 @@ protected:
     unsigned int groupId;
     /// Array to save the lamps.
     std::vector <PhilipsHueLight> lights;
-
+    QMutex eGroupMutex;
     Logger *log;
     HueEntertainmentWorker *worker;
 

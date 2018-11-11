@@ -336,7 +336,7 @@ send_request:
     while (1) {
 
         QByteArray Msg;
-
+        eMutex.lock();
         Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (lights->size()));
         Msg.append((char*)HEADER, sizeof(HEADER));
         
@@ -354,7 +354,7 @@ send_request:
             };
             Msg.append((char*)payload, sizeof(payload));
         }
-    
+        eMutex.unlock();
         len = Msg.size();
         qDebug() << "mbedtls_ssl_write Msg.size: " << len;
         qDebug() << "Msg: " << (unsigned char *)Msg.data();
