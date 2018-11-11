@@ -35,6 +35,7 @@ private:
     unsigned int groupId;
     /// Array to save the lamps.
     std::vector <PhilipsHueLight> *lights;
+    QMutex eMutex;
 };
 
 class LedDevicePhilipsHueEntertainment : public LedDevice
@@ -76,7 +77,7 @@ protected:
     unsigned int groupId;
     /// Array to save the lamps.
     std::vector <PhilipsHueLight> lights;
-    QMutex eMutex;
+
     Logger *log;
     HueEntertainmentWorker *worker;
 
