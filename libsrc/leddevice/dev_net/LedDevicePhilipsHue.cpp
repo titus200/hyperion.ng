@@ -28,20 +28,19 @@ CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangl
 	float Z = r * 0.000088f + g * 0.072310f + b * 0.986039f;
 
 	float bri = fmax(fmax(red, green), blue);
+	float min1 = fmin(fmin(red, green), blue);
+	float L1 = (bri + min1) / 2;
+
 	float bri2 = fmax(fmax(r, g), b);
+	float min2 = fmin(fmin(r, g), b);
+	float L2 = (bri2 + min2) / 2;
 
-	float min1 = fmin(fmin(r, g), b);
-	float max1 = fmax(fmax(r, g), b);
-	float L1 = (max1 + min1) / 2;
-
-	float min2 = fmin(fmin(red, green), blue);
-	float max2 = fmax(fmax(red, green), blue);
-	float L2 = (max2 + min2) / 2;
-
+	/*
 	qDebug() << "red:" << red << ", green: " << green << ", blue: " << blue;
 	qDebug() << "r:" << r << ", g: " << g << ", b: " << b;
 	qDebug() << "bri:" << bri << ", bri2: " << bri2;
 	qDebug() << "L1:" << L1 << ", L2: " << L2;
+	*/
 
 	// Convert to x,y space.
 	float cx = X / (X + Y + Z);
@@ -58,7 +57,7 @@ CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangl
 	//float bri = fmax(fmax(red, green), blue);
 
 	CiColor xy =
-	{ cx, cy, bri };
+	{ cx, cy, L2 };
 	// Check if the given XY value is within the color reach of our lamps.
 	if (!isPointInLampsReach(xy, colorSpace))
 	{
