@@ -27,7 +27,7 @@ CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangl
 	float Y = r * 0.283881f + g * 0.668433f + b * 0.047685f;
 	float Z = r * 0.000088f + g * 0.072310f + b * 0.986039f;
 
-	float bri = fmax(fmax(red, green), blue);
+	//float bri = fmax(fmax(red, green), blue);
 	//float min1 = fmin(fmin(red, green), blue);
 	//float L1 = (bri + min1) / 2;
 
