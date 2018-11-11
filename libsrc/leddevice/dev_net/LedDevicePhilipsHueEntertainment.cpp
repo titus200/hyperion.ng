@@ -159,7 +159,7 @@ void HueEntertainmentWorker::run() {
 
 #define READ_TIMEOUT_MS 1000
 #define MAX_RETRY 5
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 2
 #define SERVER_PORT "2100"
 #define SERVER_NAME "Hue"
 
@@ -358,9 +358,9 @@ send_request:
         //len = Msg.size();
         //qDebug() << "mbedtls_ssl_write Msg.size: " <<  Msg.size();
         //qDebug() << "Msg: " << (unsigned char *)Msg.data();
-        (unsigned char *) cMsg, dMsg; 
+        unsigned char cMsg = '';
         do {
-            dMsg = Msg.data();
+            dMsg = (unsigned char *)Msg.data();
             if(cMsg != dMsg) {
                 cMsg = dMsg;
                 len = Msg.size();

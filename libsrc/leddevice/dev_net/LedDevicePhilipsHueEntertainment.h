@@ -37,8 +37,8 @@ private:
     /// Array to save the lamps.
     std::vector <PhilipsHueLight> *lights;
     QMutex eMutex;
-    (unsigned char *)cMsg;
-    (unsigned char *)dMsg;
+    unsigned char cMsg;
+    unsigned char dMsg;
 };
 
 class LedDevicePhilipsHueEntertainment : public LedDevice
