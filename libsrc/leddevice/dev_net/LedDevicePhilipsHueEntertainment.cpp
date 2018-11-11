@@ -337,7 +337,7 @@ send_request:
 
         QByteArray Msg;
         eMutex.lock();
-        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (*lights->size()));
+        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (lights->size()));
         Msg.append((char*)HEADER, sizeof(HEADER));
         
         for (const PhilipsHueLight& lamp : *lights) {
