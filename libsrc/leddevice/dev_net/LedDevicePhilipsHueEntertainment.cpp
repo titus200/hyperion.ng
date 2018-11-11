@@ -159,7 +159,7 @@ void HueEntertainmentWorker::run() {
 
 #define READ_TIMEOUT_MS 1000
 #define MAX_RETRY 5
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 1
 #define SERVER_PORT "2100"
 #define SERVER_NAME "Hue"
 
