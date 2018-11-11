@@ -304,14 +304,12 @@ send_request:
         Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (lights->size()));
         Msg.append((char*)HEADER, sizeof(HEADER));
         
-        unsigned int idx = 0;
         for (const PhilipsHueLight& lamp : *lights) {
             quint64 R = lamp.getColor().x * 0xffff;
             quint64 G = lamp.getColor().y * 0xffff;
             quint64 B = lamp.getColor().bri * 0xffff;
 
             unsigned int id = lamp.getId();
-            qDebug() << "Light idx " << idx << ", ID: " << id;
             const uint8_t payload[] = {
                 0x00, 0x00, ((uint8_t)id),
                 static_cast<uint8_t>((R >> 8) & 0xff), static_cast<uint8_t>(R & 0xff),
@@ -319,11 +317,9 @@ send_request:
                 static_cast<uint8_t>((B >> 8) & 0xff), static_cast<uint8_t>(B & 0xff)
             };
             Msg.append((char*)payload, sizeof(payload));
-            idx++;
         }
 
         int len = Msg.size();
-
         do ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
         while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
