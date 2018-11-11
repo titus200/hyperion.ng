@@ -335,7 +335,7 @@ send_request:
 
     while (1) {
 
-        QByteArray Msg, cMsg;
+        QByteArray Msg;
         eMutex.lock();
         Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (lights->size()));
         Msg.append((char*)HEADER, sizeof(HEADER));
@@ -355,28 +355,16 @@ send_request:
             Msg.append((char*)payload, sizeof(payload));
         }
         eMutex.unlock();
-        //len = Msg.size();
-        //qDebug() << "mbedtls_ssl_write Msg.size: " <<  Msg.size();
-        qDebug() << " Msg: " <<  Msg.data();
-        do {
-            if(cMsg.data() != Msg.data()) {
-                qDebug() << "cMsg: " << cMsg.data();
-                cMsg = Msg;
-                len = Msg.size();
-                ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
-                //qDebug() << "mbedtls_ssl_write inside do-while Msg.size: " << len;
-            }else{
-                ret = MBEDTLS_ERR_SSL_WANT_READ;
-                qDebug() << "mbedtls_ssl_write : " << ret;
-            }
-        } while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
-
+        int len = Msg.size();
+        do ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
+        while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
         if(ret < 0){
             mbedtls_printf(" failed\n  ! mbedtls_ssl_write returned %d\n\n", ret);
-            goto exit;
+            break;
+            //goto exit;
         }        
         //Bridge send max 25Hz / sec = 1000ms / 25 = 40sm mslepp
-        QThread::msleep(40);
+        //QThread::msleep(40);
     }
 
     /*
