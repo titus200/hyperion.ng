@@ -355,18 +355,21 @@ send_request:
             Msg.append((char*)payload, sizeof(payload));
         }
         eMutex.unlock();
-        len = Msg.size();
-        qDebug() << "mbedtls_ssl_write Msg.size: " << len;
-        qDebug() << "Msg: " << (unsigned char *)Msg.data();
-        do ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
-        while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+        //len = Msg.size();
+        qDebug() << "mbedtls_ssl_write Msg.size: " <<  Msg.size();
+        //qDebug() << "Msg: " << (unsigned char *)Msg.data();
+        do {
+            len = Msg.size();
+            ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
+            qDebug() << "mbedtls_ssl_write inside dowhile Msg.size: " << len;
+        } while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
         if(ret < 0){
             mbedtls_printf(" failed\n  ! mbedtls_ssl_write returned %d\n\n", ret);
             goto exit;
         }        
         //Bridge send max 25Hz / sec = 1000ms / 25 = 40sm mslepp
-        //QThread::msleep(40);
+        QThread::msleep(40);
     }
 
     /*
@@ -374,11 +377,11 @@ send_request:
     */
     mbedtls_printf( "  < Read from server:" );
 
-    len = sizeof(buf) - 1;
-    memset(buf, 0, sizeof(buf));
+    //len = sizeof(buf) - 1;
+    //memset(buf, 0, sizeof(buf));
 
-    do ret = mbedtls_ssl_read(&ssl, buf, len);
-    while(ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+    //do ret = mbedtls_ssl_read(&ssl, buf, len);
+    //while(ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
     if(ret <= 0) {
         switch(ret) {
@@ -397,8 +400,8 @@ send_request:
         }
     }
 
-    len = ret;
-    mbedtls_printf(" %d bytes read\n\n%s\n\n", len, buf);
+    //len = ret;
+    //mbedtls_printf(" %d bytes read\n\n%s\n\n", len, buf);
 
     /*
     * 8. Done, cleanly close the connection
