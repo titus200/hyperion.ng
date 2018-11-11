@@ -57,7 +57,7 @@ CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangl
 	//float bri = fmax(fmax(red, green), blue);
 
 	CiColor xy =
-	{ cx, cy, L2 };
+	{ cx, cy, bri2 };
 	// Check if the given XY value is within the color reach of our lamps.
 	if (!isPointInLampsReach(xy, colorSpace))
 	{

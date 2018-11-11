@@ -303,14 +303,14 @@ send_request:
 
         Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (lights->size()));
         Msg.append((char*)HEADER, sizeof(HEADER));
-
+        
+        unsigned int idx = 0;
         for (const PhilipsHueLight& lamp : *lights) {
             quint64 R = lamp.getColor().x * 0xffff;
             quint64 G = lamp.getColor().y * 0xffff;
             quint64 B = lamp.getColor().bri * 0xffff;
 
             unsigned int id = lamp.getId();
-            unsigned int idx = 0;
             qDebug() << "Light idx " << idx << ", ID: " << id;
             const uint8_t payload[] = {
                 0x00, 0x00, ((uint8_t)id),
