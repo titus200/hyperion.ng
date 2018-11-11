@@ -4,8 +4,23 @@
 #include <QDebug>
 
 // Mbedtls
+#if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
+#if defined(MBEDTLS_PLATFORC)
 #include "mbedtls/platform.h"
+#else
+#include <stdio.h>
+#define mbedtls_printf     printf
+#define mbedtls_fprintf    fprintf
+#endif
+
+#include <string.h>
+#include <math.h>
+
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
@@ -135,16 +150,23 @@ void LedDevicePhilipsHueEntertainment::stateChanged(bool newState)
 HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username, QString clientkey, std::vector<PhilipsHueLight>* lights): output(output), username(username), clientkey(clientkey), lights(lights) {
 }
 
+static void my_debug( void *ctx, int level, const char *file, int line, const char *str ) {
+    ((void) level);
+    mbedtls_fprintf( (FILE *) ctx, "%s:%04d: %s", file, line, str );
+}
+
 void HueEntertainmentWorker::run() {
 
 #define READ_TIMEOUT_MS 1000
-#define MAX_RETRY       5
-#define DEBUG_LEVEL 2000
+#define MAX_RETRY 5
+#define DEBUG_LEVEL 4
 #define SERVER_PORT "2100"
 #define SERVER_NAME "Hue"
 
-    int ret;
+    int ret, len;
     mbedtls_net_context server_fd;
+    uint32_t flags;
+    unsigned char buf[1024];
     const char *pers = "dtls_client";
     int retry_left = MAX_RETRY;
 
@@ -155,8 +177,9 @@ void HueEntertainmentWorker::run() {
     mbedtls_x509_crt cacert;
     mbedtls_timing_delay_context timer;
 
-    //mbedtls_debug_set_threshold(1000);
-    mbedtls_debug_set_threshold(4);
+    #if defined(MBEDTLS_DEBUG_C)
+        mbedtls_debug_set_threshold( DEBUG_LEVEL );
+    #endif
 
     /*
     * -1. Load psk
@@ -208,9 +231,11 @@ void HueEntertainmentWorker::run() {
         goto exit;
     }
 
+    mbedtls_ssl_conf_transport(&conf, MBEDTLS_SSL_TRANSPORT_DATAGRAM);
     mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
     mbedtls_ssl_conf_ca_chain(&conf, &cacert, NULL);
     mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
+    mbedtls_ssl_conf_dbg(&conf, my_debug, stdout);
 
     if ((ret = mbedtls_ssl_setup(&ssl, &conf)) != 0) {
         qCritical() << "mbedtls_ssl_setup FAILED" << ret;
@@ -240,22 +265,28 @@ void HueEntertainmentWorker::run() {
 
     qDebug() << "Performing the DTLS handshake...";
 
-    for (int attempt = 0; attempt < 4; ++attempt) {
-        qDebug() << "handshake attempt" << attempt;
-        mbedtls_ssl_conf_handshake_timeout(&conf, 400, 1000);
-        do ret = mbedtls_ssl_handshake(&ssl);
-        while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
-
-        if (ret == 0)
-            break;
-
-        msleep(200);
-    }
+    //for (int attempt = 0; attempt < 4; ++attempt) {
+    //qDebug() << "handshake attempt" << attempt;
+    //mbedtls_ssl_conf_handshake_timeout(&conf, 400, 5000);
+    mbedtls_ssl_conf_handshake_timeout(&conf, 100, 60000);
+    do ret = mbedtls_ssl_handshake(&ssl);
+    while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+    //if (ret == 0)
+    //      break;
+    //    msleep(200);
+    //}
 
     qDebug() << "handshake result" << ret;
 
+    /*
     if (ret != 0) {
         qCritical() << "mbedtls_ssl_handshake FAILED" << ret;
+        goto exit;
+    }
+    */
+
+    if( ret != 0 ) {
+        mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
         goto exit;
     }
 
@@ -276,7 +307,7 @@ send_request:
             0x00, //linear filter
     };
     */
-    while (true) {
+    while (1) {
         static const uint8_t HEADER[] = {
             'H', 'u', 'e', 'S', 't', 'r', 'e', 'a', 'm', //protocol
             0x01, 0x00, //version 1.0
@@ -318,34 +349,49 @@ send_request:
             };
             Msg.append((char*)payload, sizeof(payload));
         }
-
-        int len = Msg.size();
+    
+        len = Msg.size();
         do ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
         while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
-        if(ret < 0) {
-            break;
-        }
+        if(ret < 0){
+            mbedtls_printf(" failed\n  ! mbedtls_ssl_write returned %d\n\n", ret);
+            goto exit;
+        }        
         //Bridge send max 25Hz / sec = 1000ms / 25 = 40sm mslepp
-        QThread::msleep(40);
+        //QThread::msleep(40);
     }
 
-    if (ret < 0) {
-        switch (ret) {
+    /*
+    * 7. Read the echo response
+    */
+    mbedtls_printf( "  < Read from server:" );
+
+    len = sizeof(buf) - 1;
+    memset(buf, 0, sizeof(buf));
+
+    do ret = mbedtls_ssl_read(&ssl, buf, len);
+    while(ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+
+    if(ret <= 0) {
+        switch(ret) {
             case MBEDTLS_ERR_SSL_TIMEOUT:
-                qWarning() << " timeout";
-                if (retry_left-- > 0)
+                mbedtls_printf(" timeout\n\n");
+                if( retry_left-- > 0 )
                     goto send_request;
                 goto exit;
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
-                qWarning() << " connection was closed gracefully";
+                mbedtls_printf(" connection was closed gracefully\n");
                 ret = 0;
                 goto close_notify;
             default:
-                qWarning() << " mbedtls_ssl_read returned" << ret;
+                mbedtls_printf(" mbedtls_ssl_read returned -0x%x\n\n", -ret);
                 goto exit;
         }
     }
+
+    len = ret;
+    mbedtls_printf(" %d bytes read\n\n%s\n\n", len, buf);
 
     /*
     * 8. Done, cleanly close the connection
