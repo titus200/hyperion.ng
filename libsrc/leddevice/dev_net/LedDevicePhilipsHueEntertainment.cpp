@@ -269,7 +269,8 @@ void HueEntertainmentWorker::run() {
     for (int attempt = 0; attempt < 6; ++attempt) {
         qDebug() << "handshake attempt" << attempt;
         //mbedtls_ssl_conf_handshake_timeout(&conf, 400, 5000);
-        mbedtls_ssl_conf_handshake_timeout(&conf, 500, 2500);
+        //mbedtls_ssl_conf_handshake_timeout(&conf, 500, 2500);
+        mbedtls_ssl_conf_handshake_timeout(&conf, 400, 1000);
         do ret = mbedtls_ssl_handshake(&ssl);
         while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
         if (ret == 0) break;
