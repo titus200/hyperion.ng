@@ -152,7 +152,7 @@ HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username,
 
 static void my_debug( void *ctx, int level, const char *file, int line, const char *str ) {
     ((void) level);
-    mbedtls_fprintf( ctx, "%s:%04d: %s", file, line, str );
+    mbedtls_fprintf( (FILE *) ctx, "%04d: %s", line, str );
 }
 
 void HueEntertainmentWorker::run() {
