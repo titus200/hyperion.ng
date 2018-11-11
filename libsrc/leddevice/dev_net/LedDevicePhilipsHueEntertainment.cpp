@@ -311,28 +311,29 @@ send_request:
             0x00, //linear filter
     };
     */
-    while (1) {
-        static const uint8_t HEADER[] = {
-            'H', 'u', 'e', 'S', 't', 'r', 'e', 'a', 'm', //protocol
-            0x01, 0x00, //version 1.0
-            0x01, //sequence number 1
-            0x00, 0x00, //Reserved write 0’s
-            0x01,
-            0x00, // Reserved, write 0’s
-        };
+    static const uint8_t HEADER[] = {
+        'H', 'u', 'e', 'S', 't', 'r', 'e', 'a', 'm', //protocol
+        0x01, 0x00, //version 1.0
+        0x01, //sequence number 1
+        0x00, 0x00, //Reserved write 0’s
+        0x01,
+        0x00, // Reserved, write 0’s
+    };
 
-        static const uint8_t PAYLOAD_PER_LIGHT[] = {
-            0x01, 0x00, 0x06, //light ID
-            //color: 16 bpc
-            0xff, 0xff,
-            0xff, 0xff,
-            0xff, 0xff,
-            /*
-            (message.R >> 8) & 0xff, message.R & 0xff,
-            (message.G >> 8) & 0xff, message.G & 0xff,
-            (message.B >> 8) & 0xff, message.B & 0xff
-            */
-        };
+    static const uint8_t PAYLOAD_PER_LIGHT[] = {
+        0x01, 0x00, 0x06, //light ID
+        //color: 16 bpc
+        0xff, 0xff,
+        0xff, 0xff,
+        0xff, 0xff,
+        /*
+        (message.R >> 8) & 0xff, message.R & 0xff,
+        (message.G >> 8) & 0xff, message.G & 0xff,
+        (message.B >> 8) & 0xff, message.B & 0xff
+        */
+    };
+
+    while (1) {
 
         QByteArray Msg;
 
@@ -355,6 +356,8 @@ send_request:
         }
     
         len = Msg.size();
+        qDebug() << "mbedtls_ssl_write Msg.size: " << len;
+        qDebug() << "Msg: " << (unsigned char *)Msg.data();
         do ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
         while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
