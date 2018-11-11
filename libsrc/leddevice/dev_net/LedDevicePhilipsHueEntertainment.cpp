@@ -358,7 +358,7 @@ send_request:
         //len = Msg.size();
         //qDebug() << "mbedtls_ssl_write Msg.size: " <<  Msg.size();
         do {
-            if((unsigned char *)cMsg.data() !== (unsigned char *)Msg.data()) {
+            if((unsigned char *)cMsg.data() != (unsigned char *)Msg.data()) {
                 qDebug() << "Msg: " << Msg;
                 cMsg = Msg;
                 len = Msg.size();
