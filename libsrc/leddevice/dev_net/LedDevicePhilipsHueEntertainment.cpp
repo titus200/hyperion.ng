@@ -356,15 +356,15 @@ send_request:
         }
         eMutex.unlock();
         //len = Msg.size();
-        qDebug() << "mbedtls_ssl_write Msg.size: " <<  Msg.size();
-        qDebug() << " Msg: " <<  (unsigned char *)Msg.data();
+        //qDebug() << "mbedtls_ssl_write Msg.size: " <<  Msg.size();
+        qDebug() << " Msg: " <<  Msg.data();
         do {
-            if((unsigned char *)cMsg.data() != (unsigned char *)Msg.data()) {
-                qDebug() << "cMsg: " << (unsigned char *)cMsg.data();
+            if(cMsg.data != Msg.data()) {
+                qDebug() << "cMsg: " << cMsg.data();
                 cMsg = Msg;
                 len = Msg.size();
                 ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
-                qDebug() << "mbedtls_ssl_write inside do-while Msg.size: " << len;
+                //qDebug() << "mbedtls_ssl_write inside do-while Msg.size: " << len;
             }else{
                 ret = MBEDTLS_ERR_SSL_WANT_READ;
                 qDebug() << "mbedtls_ssl_write : " << ret;
