@@ -361,7 +361,7 @@ send_request:
             Msg.append((char*)payload, sizeof(payload));
         }
         eMutex.unlock();
-        int len = Msg.size();
+        len = Msg.size();
         do ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
         while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
         if(ret < 0){
