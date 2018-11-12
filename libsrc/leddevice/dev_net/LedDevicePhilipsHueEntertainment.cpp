@@ -267,7 +267,7 @@ void HueEntertainmentWorker::run() {
     qDebug() << "Performing the DTLS handshake...";
 
     //for (int attempt = 0; attempt < 6; ++attempt) {
-        qDebug() << "handshake attempt" << attempt;
+        //qDebug() << "handshake attempt" << attempt;
         //mbedtls_ssl_conf_handshake_timeout(&conf, 400, 5000);
         //mbedtls_ssl_conf_handshake_timeout(&conf, 500, 2500);
         mbedtls_ssl_conf_handshake_timeout(&conf, 400, 1000);
