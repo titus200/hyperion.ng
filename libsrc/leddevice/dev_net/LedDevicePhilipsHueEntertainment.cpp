@@ -138,7 +138,18 @@ HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username,
 }
 
 void HueEntertainmentWorker::run() {
-    int ret;
+
+#define READ_TIMEOUT_MS 1000
+#define MAX_RETRY 5
+/* Debug levels - 0 No Debug - 1 Error - 2 State change - 3 Informational - 4 Verbose */
+#define DEBUG_LEVEL 3
+#define SERVER_PORT "2100"
+#define SERVER_NAME "Hue"
+
+    int ret, len;
+    mbedtls_net_context server_fd;
+    //uint32_t flags;
+    //unsigned char buf[1024];
     const char *pers = "dtls_client";
 
     mbedtls_net_context server_fd;
@@ -149,7 +160,7 @@ void HueEntertainmentWorker::run() {
     mbedtls_x509_crt cacert;
     mbedtls_timing_delay_context timer;
 
-    mbedtls_debug_set_threshold(3);
+    mbedtls_debug_set_threshold(DEBUG_LEVEL);
 
     /*
     * -1. Load psk
@@ -230,19 +241,41 @@ void HueEntertainmentWorker::run() {
     mbedtls_ssl_set_timer_cb(&ssl, &timer, mbedtls_timing_set_delay,
                              mbedtls_timing_get_delay);
 
-    /*
- * 4. Handshake
- */
-    for (int attempt = 0; attempt < 4; ++attempt)
-    {
+    qDebug() << "Performing the DTLS handshake...";
+
+    for (int attempt = 0; attempt < 4; ++attempt) {
+        qDebug() << "handshake attempt" << attempt;
+        //mbedtls_ssl_conf_handshake_timeout(&conf, 400, 5000);
+        //mbedtls_ssl_conf_handshake_timeout(&conf, 500, 2500);
         mbedtls_ssl_conf_handshake_timeout(&conf, 400, 1000);
         do ret = mbedtls_ssl_handshake(&ssl);
-        while (ret == MBEDTLS_ERR_SSL_WANT_READ ||
-               ret == MBEDTLS_ERR_SSL_WANT_WRITE);
-
-        if (ret == 0)
-            break;
+        while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+        if (ret == 0) break;
+        msleep(200);
     }
+
+    qDebug() << "handshake result" << ret;
+
+    if( ret != 0 ) {
+        mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
+        goto exit;
+    }
+    
+    qDebug() << "Handshake successful. Connected!";
+    
+    /*
+     * 5. Verify the server certificate
+     */
+    /*
+    mbedtls_printf( "  . Verifying peer X.509 certificate..." );
+
+    if((flags = mbedtls_ssl_get_verify_result(&ssl))!= 0) {
+        char vrfy_buf[512];
+        mbedtls_printf(" failed\n");
+        mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "  ! ", flags);
+        mbedtls_printf("%s\n", vrfy_buf);
+    }
+    */
 
     if (ret != 0)
     {
