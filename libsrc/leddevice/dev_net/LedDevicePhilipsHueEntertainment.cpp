@@ -52,11 +52,11 @@ LedDevicePhilipsHueEntertainment::LedDevicePhilipsHueEntertainment(const QJsonOb
 bool LedDevicePhilipsHueEntertainment::init(const QJsonObject &deviceConfig)
 {
     groupId = deviceConfig["groupId"].toInt();
-
+    QJsonObject newDC = deviceConfig;
     // get light info from bridge
     bridge.bConnect();
-
-    LedDevice::init(deviceConfig);
+    newDC.insert("latchTime",QJsonValue(100*(int)lightIds.size()));
+    LedDevice::init(newDC);
 
     return true;
 }
@@ -159,7 +159,7 @@ void HueEntertainmentWorker::run() {
 
 #define READ_TIMEOUT_MS 1000
 #define MAX_RETRY 5
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 3 // Debug levels - 0 No Debug - 1 Error - 2 State change - 3 Informational - 4 Verbose
 #define SERVER_PORT "2100"
 #define SERVER_NAME "Hue"
 
@@ -266,23 +266,31 @@ void HueEntertainmentWorker::run() {
 
     qDebug() << "Performing the DTLS handshake...";
 
-    for (int attempt = 0; attempt < 6; ++attempt) {
+    //for (int attempt = 0; attempt < 6; ++attempt) {
         qDebug() << "handshake attempt" << attempt;
         //mbedtls_ssl_conf_handshake_timeout(&conf, 400, 5000);
         //mbedtls_ssl_conf_handshake_timeout(&conf, 500, 2500);
         mbedtls_ssl_conf_handshake_timeout(&conf, 400, 1000);
-        do ret = mbedtls_ssl_handshake(&ssl);
-        while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
-        if (ret == 0) break;
-        msleep(200);
-    }
+
+        while((ret = mbedtls_ssl_handshake(&ssl)) != 0) {
+            if(ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+                mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
+                goto exit;
+            }
+        }
+
+        //do ret = mbedtls_ssl_handshake(&ssl);
+        //while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+        //if (ret == 0) break;
+        //msleep(200);
+    //}
 
     qDebug() << "handshake result" << ret;
 
-    if( ret != 0 ) {
-        mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
-        goto exit;
-    }
+    //if( ret != 0 ) {
+    //    mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
+    //    goto exit;
+    //}
     
     qDebug() << "Handshake successful. Connected!";
     
