@@ -161,6 +161,16 @@ HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username,
                                                                                       lights(lights) {
 }
 
+static void my_debug( void *ctx, int level,
+                      const char *file, int line,
+                      const char *str )
+{
+    ((void) level);
+
+    mbedtls_fprintf( (FILE *) ctx, "%s:%04d: %s", file, line, str );
+    fflush(  (FILE *) ctx  );
+}
+
 void HueEntertainmentWorker::run()
 {
 
@@ -202,6 +212,8 @@ void HueEntertainmentWorker::run()
     mbedtls_ssl_config_init(&conf);
     mbedtls_x509_crt_init(&cacert);
     mbedtls_ctr_drbg_init(&ctr_drbg);
+    
+    mbedtls_ssl_conf_dbg(&conf, my_debug, stdout);
 
     qDebug() << "Seeding the random number generator...";
 
