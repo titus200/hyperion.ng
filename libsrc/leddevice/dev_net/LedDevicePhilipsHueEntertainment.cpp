@@ -55,7 +55,7 @@ bool LedDevicePhilipsHueEntertainment::init(const QJsonObject &deviceConfig)
     QJsonObject newDC = deviceConfig;
     // get light info from bridge
     bridge.bConnect();
-    newDC.insert("latchTime",QJsonValue(100*(int)lightIds.size()));
+    newDC.insert("latchTime",QJsonValue(0));
     LedDevice::init(newDC);
 
     return true;
@@ -166,8 +166,6 @@ void HueEntertainmentWorker::run() {
 
     int ret, len;
     mbedtls_net_context server_fd;
-    uint32_t flags;
-    //unsigned char buf[1024];
     const char *pers = "dtls_client";
     int retry_left = MAX_RETRY;
 
@@ -182,7 +180,7 @@ void HueEntertainmentWorker::run() {
         mbedtls_debug_set_threshold( DEBUG_LEVEL );
     #endif
 
-    /*
+/*
     * -1. Load psk
     */
     QByteArray pskArray = clientkey.toUtf8();
@@ -194,22 +192,21 @@ void HueEntertainmentWorker::run() {
     /*
     * 0. Initialize the RNG and the session data
     */
-
     mbedtls_net_init(&server_fd);
     mbedtls_ssl_init(&ssl);
     mbedtls_ssl_config_init(&conf);
     mbedtls_x509_crt_init(&cacert);
     mbedtls_ctr_drbg_init(&ctr_drbg);
-    
+
     qDebug() << "Seeding the random number generator...";
 
     mbedtls_entropy_init(&entropy);
-
-    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) != 0) {
+    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+        (const unsigned char *)pers,
+        strlen(pers))) != 0) {
         mbedtls_printf(" failed\n  ! mbedtls_ctr_drbg_seed returned %d\n", ret);
         goto exit;
     }
-
     /*
     * 1. Start the connection
     */
@@ -232,7 +229,7 @@ void HueEntertainmentWorker::run() {
         goto exit;
     }
 
-    mbedtls_ssl_conf_transport(&conf, MBEDTLS_SSL_TRANSPORT_DATAGRAM);
+    //mbedtls_ssl_conf_transport(&conf, MBEDTLS_SSL_TRANSPORT_DATAGRAM);
     mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
     mbedtls_ssl_conf_ca_chain(&conf, &cacert, NULL);
     mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
@@ -267,15 +264,13 @@ void HueEntertainmentWorker::run() {
 
     qDebug() << "Performing the DTLS handshake...";
 
-    for (int attempt = 0; attempt < 6; ++attempt) {
+    for (int attempt = 0; attempt < 4; ++attempt) {
         qDebug() << "handshake attempt" << attempt;
-        //mbedtls_ssl_conf_handshake_timeout(&conf, 400, 5000);
-        //mbedtls_ssl_conf_handshake_timeout(&conf, 500, 2500);
         mbedtls_ssl_conf_handshake_timeout(&conf, 400, 1000);
         do ret = mbedtls_ssl_handshake(&ssl);
         while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
         if (ret == 0) break;
-        //msleep(200);
+        msleep(200);
     }
 
     qDebug() << "handshake result" << ret;
@@ -290,6 +285,7 @@ void HueEntertainmentWorker::run() {
     /*
      * 5. Verify the server certificate
      */
+    /*
     mbedtls_printf( "  . Verifying peer X.509 certificate..." );
 
     if((flags = mbedtls_ssl_get_verify_result(&ssl))!= 0) {
@@ -298,13 +294,13 @@ void HueEntertainmentWorker::run() {
         mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "  ! ", flags);
         mbedtls_printf("%s\n", vrfy_buf);
     }
+    */
 
     /*
     * 6. Send messages repeatedly until we lose connection or are told to stop
     */
 send_request:
-    while (true)
-    {
+    while (true) {
         static const uint8_t HEADER[] = {
             'H', 'u', 'e', 'S', 't', 'r', 'e', 'a', 'm', //protocol
 
@@ -369,7 +365,7 @@ send_request:
     /*
     * 7. Read the echo response
     */
-    mbedtls_printf( "  < Read from server:" );
+    //mbedtls_printf( "  < Read from server:" );
 
     //len = sizeof(buf) - 1;
     //memset(buf, 0, sizeof(buf));
@@ -377,7 +373,7 @@ send_request:
     //do ret = mbedtls_ssl_read(&ssl, buf, len);
     //while(ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
-    if(ret <= 0) {
+    if(ret < 0) {
         switch(ret) {
             case MBEDTLS_ERR_SSL_TIMEOUT:
                 mbedtls_printf(" timeout\n\n");
