@@ -2,7 +2,6 @@
 
 // Qt includes
 #include <QDebug>
-
 #include <QNetworkReply>
 #include <QJsonObject>
 #include <QJsonDocument>
@@ -162,11 +161,12 @@ HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username,
                                                                                       lights(lights) {
 }
 
-void HueEntertainmentWorker::run() {
+void HueEntertainmentWorker::run()
+{
 
 #define READ_TIMEOUT_MS 1000
 #define MAX_RETRY       5
-#define DEBUG_LEVEL 3
+#define DEBUG_LEVEL 4
 #define SERVER_PORT "2100"
 #define SERVER_NAME "Hue"
 
@@ -182,7 +182,7 @@ void HueEntertainmentWorker::run() {
     mbedtls_x509_crt cacert;
     mbedtls_timing_delay_context timer;
 
-    mbedtls_debug_set_threshold(4);
+    mbedtls_debug_set_threshold(DEBUG_LEVEL);
 
     /*
     * -1. Load psk
@@ -206,7 +206,10 @@ void HueEntertainmentWorker::run() {
     qDebug() << "Seeding the random number generator...";
 
     mbedtls_entropy_init(&entropy);
-    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) != 0) {
+    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+        (const unsigned char *)pers,
+        strlen(pers))) != 0)
+    {
         mbedtls_printf(" failed\n  ! mbedtls_ctr_drbg_seed returned %d\n", ret);
         goto exit;
     }
@@ -216,10 +219,13 @@ void HueEntertainmentWorker::run() {
     */
     qDebug() << "Connecting to udp" << output << SERVER_PORT;
 
-    if ((ret = mbedtls_net_connect(&server_fd, output.toUtf8(), SERVER_PORT, MBEDTLS_NET_PROTO_UDP)) != 0) {
+    if ((ret = mbedtls_net_connect(&server_fd, output.toUtf8(),
+        SERVER_PORT, MBEDTLS_NET_PROTO_UDP)) != 0)
+    {
         qCritical() << "mbedtls_net_connect FAILED" << ret;
         goto exit;
     }
+
 
     /*
     * 2. Setup stuff
@@ -336,7 +342,14 @@ send_request:
 
         eMutex.lock();
         Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * lights->size());
+
         Msg.append((char*)HEADER, sizeof(HEADER));
+
+		//static QElapsedTimer timer;
+		//double deltaTime = timer.restart() / 1000.0;
+		//if (deltaTime > 1.0 || deltaTime <= 0.0 || std::isnan(deltaTime)) {
+		//	deltaTime = 1.0;
+		//}
 
         for (const PhilipsHueLight& lamp : *lights) {
             quint64 R = lamp.getColor().x * 0xffff;
@@ -367,7 +380,7 @@ send_request:
         }
 
         //TODO: make this delay customizable?
-        QThread::msleep(40);
+        QThread::msleep(30);
     }
 
     if (ret < 0)
