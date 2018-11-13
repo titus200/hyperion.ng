@@ -182,7 +182,7 @@ void HueEntertainmentWorker::run() {
     mbedtls_x509_crt cacert;
     mbedtls_timing_delay_context timer;
 
-    mbedtls_debug_set_threshold(0);
+    mbedtls_debug_set_threshold(4);
 
     /*
     * -1. Load psk

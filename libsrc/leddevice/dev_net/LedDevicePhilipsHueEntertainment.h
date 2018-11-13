@@ -7,7 +7,6 @@
 #include <QThread>
 #include <QJsonObject>
 #include <QMutex>
-#include <string.h>
 
 // Leddevice includes
 #include <leddevice/LedDevice.h>
@@ -36,7 +35,7 @@ private:
     unsigned int groupId;
     /// Array to save the lamps.
     std::vector <PhilipsHueLight> *lights;
-    
+
     QMutex eMutex;
 };
 
