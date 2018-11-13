@@ -246,7 +246,7 @@ void HueEntertainmentWorker::run() {
 
     if (ret != 0)
     {
-        qFatal() << "mbedtls_ssl_handshake returned -0x%x\n\n" << -ret;
+        qFatal("mbedtls_ssl_handshake returned -0x%x\n\n", -ret);
     }
 
     char header[] = {
