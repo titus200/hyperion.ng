@@ -3,7 +3,31 @@
 // Qt includes
 #include <QDebug>
 
-// Mbedtls
+#include <QNetworkReply>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QElapsedTimer>
+
+//----------- mbedtls
+
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
+#if defined(MBEDTLS_PLATFORC)
+#include "mbedtls/platform.h"
+#else
+#include <stdio.h>
+#define mbedtls_printf     printf
+#define mbedtls_fprintf    fprintf
+#endif
+
+#include <string.h>
+#include <math.h>
+
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
@@ -12,7 +36,8 @@
 #include "mbedtls/error.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/timing.h"
-#include "mbedtls/config.h"
+
+//----------- END mbedtls
 
 LedDevice* LedDevicePhilipsHueEntertainment::construct(const QJsonObject &deviceConfig)
 {
@@ -315,7 +340,7 @@ send_request:
         QByteArray Msg;
 
         eMutex.lock();
-        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (*lights->size()));
+        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * lights->size());
         Msg.append((char*)HEADER, sizeof(HEADER));
 
         for (const PhilipsHueLight& lamp : *lights) {
@@ -325,7 +350,7 @@ send_request:
 
             unsigned int id = lamp.getId();
             const uint8_t payload[] = {
-                0x00, 0x00, ((uint8_t)id.toInt()),
+                0x00, 0x00, ((uint8_t)id),
                 static_cast<uint8_t>((R >> 8) & 0xff), static_cast<uint8_t>(R & 0xff),
                 static_cast<uint8_t>((G >> 8) & 0xff), static_cast<uint8_t>(G & 0xff),
                 static_cast<uint8_t>((B >> 8) & 0xff), static_cast<uint8_t>(B & 0xff)
