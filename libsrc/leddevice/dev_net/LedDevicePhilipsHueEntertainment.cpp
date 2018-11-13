@@ -206,6 +206,7 @@ void HueEntertainmentWorker::run()
     qDebug() << "Seeding the random number generator...";
 
     mbedtls_entropy_init(&entropy);
+    qDebug() << "Set mbedtls_ctr_drbg_seed...";
     if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
         (const unsigned char *)pers,
         strlen(pers))) != 0)
