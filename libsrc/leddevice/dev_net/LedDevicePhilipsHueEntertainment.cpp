@@ -206,10 +206,7 @@ void HueEntertainmentWorker::run() {
     qDebug() << "Seeding the random number generator...";
 
     mbedtls_entropy_init(&entropy);
-    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-        (const unsigned char *)pers,
-        strlen(pers))) != 0)
-    {
+    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) != 0) {
         mbedtls_printf(" failed\n  ! mbedtls_ctr_drbg_seed returned %d\n", ret);
         goto exit;
     }
@@ -219,9 +216,7 @@ void HueEntertainmentWorker::run() {
     */
     qDebug() << "Connecting to udp" << output << SERVER_PORT;
 
-    if ((ret = mbedtls_net_connect(&server_fd, output.toUtf8(),
-        SERVER_PORT, MBEDTLS_NET_PROTO_UDP)) != 0)
-    {
+    if ((ret = mbedtls_net_connect(&server_fd, output.toUtf8(), SERVER_PORT, MBEDTLS_NET_PROTO_UDP)) != 0) {
         qCritical() << "mbedtls_net_connect FAILED" << ret;
         goto exit;
     }
