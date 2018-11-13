@@ -2,7 +2,9 @@
 
 // Qt includes
 #include <QString>
+#include <QObject>
 #include <QByteArray>
+#include <QJsonObject>
 
 // util includes
 #include <utils/Logger.h>
