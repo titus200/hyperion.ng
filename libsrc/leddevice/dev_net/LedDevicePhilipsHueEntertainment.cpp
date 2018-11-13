@@ -140,22 +140,19 @@ HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username,
 void HueEntertainmentWorker::run() {
 
 #define READ_TIMEOUT_MS 1000
-#define MAX_RETRY 5
-/* Debug levels - 0 No Debug - 1 Error - 2 State change - 3 Informational - 4 Verbose */
+#define MAX_RETRY       5
 #define DEBUG_LEVEL 3
 #define SERVER_PORT "2100"
 #define SERVER_NAME "Hue"
 
-    int ret, len;
+    int ret;
     mbedtls_net_context server_fd;
-    //uint32_t flags;
-    //unsigned char buf[1024];
     const char *pers = "dtls_client";
+    int retry_left = MAX_RETRY;
 
-    mbedtls_net_context server_fd;
-    mbedtls_ssl_context ssl;
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
+    mbedtls_ssl_context ssl;
     mbedtls_ssl_config conf;
     mbedtls_x509_crt cacert;
     mbedtls_timing_delay_context timer;
@@ -181,33 +178,41 @@ void HueEntertainmentWorker::run() {
     mbedtls_x509_crt_init(&cacert);
     mbedtls_ctr_drbg_init(&ctr_drbg);
 
+    qDebug() << "Seeding the random number generator...";
+
     mbedtls_entropy_init(&entropy);
     if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-                                     (const unsigned char *)pers,
-                                     strlen(pers))) != 0)
+        (const unsigned char *)pers,
+        strlen(pers))) != 0)
     {
-        qFatal("mbedtls_ctr_drbg_seed returned %d", ret);
+        mbedtls_printf(" failed\n  ! mbedtls_ctr_drbg_seed returned %d\n", ret);
+        goto exit;
     }
 
     /*
-* 1. Start the connection
-*/
+    * 1. Start the connection
+    */
+    qDebug() << "Connecting to udp" << output << SERVER_PORT;
+
     if ((ret = mbedtls_net_connect(&server_fd, output.toUtf8(),
-                                   "2100", MBEDTLS_NET_PROTO_UDP)) != 0)
+        SERVER_PORT, MBEDTLS_NET_PROTO_UDP)) != 0)
     {
-        qFatal("mbedtls_net_connect FAILED %d", ret);
+        qCritical() << "mbedtls_net_connect FAILED" << ret;
+        goto exit;
     }
 
-
     /*
- * 2. Setup stuff
- */
+    * 2. Setup stuff
+    */
+    qDebug() << "Setting up the DTLS structure...";
+
     if ((ret = mbedtls_ssl_config_defaults(&conf,
-                                           MBEDTLS_SSL_IS_CLIENT,
-                                           MBEDTLS_SSL_TRANSPORT_DATAGRAM,
-                                           MBEDTLS_SSL_PRESET_DEFAULT)) != 0)
+        MBEDTLS_SSL_IS_CLIENT,
+        MBEDTLS_SSL_TRANSPORT_DATAGRAM,
+        MBEDTLS_SSL_PRESET_DEFAULT)) != 0)
     {
-        qFatal("mbedtls_ssl_config_defaults FAILED %d", ret);
+        qCritical() << "mbedtls_ssl_config_defaults FAILED" << ret;
+        goto exit;
     }
 
     mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
@@ -216,13 +221,14 @@ void HueEntertainmentWorker::run() {
 
     if ((ret = mbedtls_ssl_setup(&ssl, &conf)) != 0)
     {
-        qFatal("mbedtls_ssl_setup FAILED %d", ret);
+        qCritical() << "mbedtls_ssl_setup FAILED" << ret;
+        goto exit;
     }
 
     if (0 != (ret = mbedtls_ssl_conf_psk(&conf, (const unsigned char*)pskRawArray.data(), pskRawArray.length() * sizeof(char),
-                                         (const unsigned char *)pskIdRawArray.data(), pskIdRawArray.length() * sizeof(char))))
+        (const unsigned char *)pskIdRawArray.data(), pskIdRawArray.length() * sizeof(char))))
     {
-        qFatal("mbedtls_ssl_conf_psk FAILED %d", ret);
+        qCritical() << "mbedtls_ssl_conf_psk FAILED" << ret;
     }
 
     int ciphers[2];
@@ -230,104 +236,170 @@ void HueEntertainmentWorker::run() {
     ciphers[1] = 0;
     mbedtls_ssl_conf_ciphersuites(&conf, ciphers);
 
-    if ((ret = mbedtls_ssl_set_hostname(&ssl, "Hue")) != 0)
+    if ((ret = mbedtls_ssl_set_hostname(&ssl, SERVER_NAME)) != 0)
     {
         qCritical() << "mbedtls_ssl_set_hostname FAILED" << ret;
+        goto exit;
     }
 
     mbedtls_ssl_set_bio(&ssl, &server_fd,
-                        mbedtls_net_send, mbedtls_net_recv, mbedtls_net_recv_timeout);
+        mbedtls_net_send, mbedtls_net_recv, mbedtls_net_recv_timeout);
 
     mbedtls_ssl_set_timer_cb(&ssl, &timer, mbedtls_timing_set_delay,
-                             mbedtls_timing_get_delay);
+        mbedtls_timing_get_delay);
 
+    /*
+    * 4. Handshake
+    */
     qDebug() << "Performing the DTLS handshake...";
 
-    for (int attempt = 0; attempt < 4; ++attempt) {
+    for (int attempt = 0; attempt < 4; ++attempt)
+    {
         qDebug() << "handshake attempt" << attempt;
-        //mbedtls_ssl_conf_handshake_timeout(&conf, 400, 5000);
-        //mbedtls_ssl_conf_handshake_timeout(&conf, 500, 2500);
         mbedtls_ssl_conf_handshake_timeout(&conf, 400, 1000);
         do ret = mbedtls_ssl_handshake(&ssl);
-        while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
-        if (ret == 0) break;
+        while (ret == MBEDTLS_ERR_SSL_WANT_READ ||
+            ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+
+        if (ret == 0)
+            break;
+
         msleep(200);
     }
 
     qDebug() << "handshake result" << ret;
 
-    if( ret != 0 ) {
-        mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
-        goto exit;
-    }
-    
-    qDebug() << "Handshake successful. Connected!";
-    
-    /*
-     * 5. Verify the server certificate
-     */
-    /*
-    mbedtls_printf( "  . Verifying peer X.509 certificate..." );
-
-    if((flags = mbedtls_ssl_get_verify_result(&ssl))!= 0) {
-        char vrfy_buf[512];
-        mbedtls_printf(" failed\n");
-        mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "  ! ", flags);
-        mbedtls_printf("%s\n", vrfy_buf);
-    }
-    */
-
     if (ret != 0)
     {
-        qFatal("mbedtls_ssl_handshake returned -0x%x\n\n", -ret);
+        qCritical() << "mbedtls_ssl_handshake FAILED" << ret;
+        goto exit;
     }
 
-    char header[] = {
-            'H', 'u', 'e', 'S', 't', 'r', 'e', 'a', 'm', //protocol
-            0x01, 0x00, //version 1.0
-            0x01, //sequence number 1
-            0x00, 0x00, //reserved
-            0x01, //color mode XY
-            0x00, //linear filter
-    };
+    qDebug() << "Handshake successful. Connected!";
 
+    /*
+    * 6. Send messages repeatedly until we lose connection or are told to stop
+    */
+send_request:
     while (true)
     {
+        static const uint8_t HEADER[] = {
+            'H', 'u', 'e', 'S', 't', 'r', 'e', 'a', 'm', //protocol
+
+            0x01, 0x00, //version 1.0
+
+            0x01, //sequence number 1
+
+            0x00, 0x00, //Reserved write 0’s
+
+            0x01,
+
+            0x00, // Reserved, write 0’s
+        };
+
+        static const uint8_t PAYLOAD_PER_LIGHT[] =
+        {
+            0x01, 0x00, 0x06, //light ID
+
+                              //color: 16 bpc
+                              0xff, 0xff,
+                              0xff, 0xff,
+                              0xff, 0xff,
+                              /*
+                              (message.R >> 8) & 0xff, message.R & 0xff,
+                              (message.G >> 8) & 0xff, message.G & 0xff,
+                              (message.B >> 8) & 0xff, message.B & 0xff
+                              */
+        };
+
         QByteArray Msg;
 
-        Msg.append(header, sizeof(header));
+        eMutex.lock();
+        Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * (*lights->size()));
+        Msg.append((char*)HEADER, sizeof(HEADER));
 
-        unsigned int idx = 0;
         for (const PhilipsHueLight& lamp : *lights) {
             quint64 R = lamp.getColor().x * 0xffff;
             quint64 G = lamp.getColor().y * 0xffff;
             quint64 B = lamp.getColor().bri * 0xffff;
 
             unsigned int id = lamp.getId();
-            char light_stream[] = {
-                    0x00, 0x00, (char)id, //light ID
-                    static_cast<uint8_t>((R >> 8) & 0xff), static_cast<uint8_t>(R & 0xff),
-                    static_cast<uint8_t>((G >> 8) & 0xff), static_cast<uint8_t>(G & 0xff),
-                    static_cast<uint8_t>((B >> 8) & 0xff), static_cast<uint8_t>(B & 0xff)
+            const uint8_t payload[] = {
+                0x00, 0x00, ((uint8_t)id.toInt()),
+                static_cast<uint8_t>((R >> 8) & 0xff), static_cast<uint8_t>(R & 0xff),
+                static_cast<uint8_t>((G >> 8) & 0xff), static_cast<uint8_t>(G & 0xff),
+                static_cast<uint8_t>((B >> 8) & 0xff), static_cast<uint8_t>(B & 0xff)
             };
 
-            Msg.append(light_stream, sizeof(light_stream));
-            idx++;
+            Msg.append((char*)payload, sizeof(payload));
         }
+        eMutex.unlock();
 
         int len = Msg.size();
 
-        do ret = mbedtls_ssl_write(&ssl,  (unsigned char *) Msg.data(), len);
+        do ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
         while (ret == MBEDTLS_ERR_SSL_WANT_READ ||
-               ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+            ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
-        if(ret < 0) {
+        if (ret < 0)
+        {
             break;
         }
+
+        //TODO: make this delay customizable?
         QThread::msleep(40);
     }
 
+    if (ret < 0)
+    {
+        switch (ret)
+        {
+        case MBEDTLS_ERR_SSL_TIMEOUT:
+            qWarning() << " timeout";
+            if (retry_left-- > 0)
+                goto send_request;
+            goto exit;
+
+        case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
+            qWarning() << " connection was closed gracefully";
+            ret = 0;
+            goto close_notify;
+
+        default:
+            qWarning() << " mbedtls_ssl_read returned" << ret;
+            goto exit;
+        }
+    }
+
+    /*
+    * 8. Done, cleanly close the connection
+    */
+close_notify:
+    qDebug() << "Closing the connection...";
+
+    /* No error checking, the connection might be closed already */
+    do ret = mbedtls_ssl_close_notify(&ssl);
+    while (ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+    ret = 0;
+
+    qDebug() << "Done";
+
+    /*
+    * 9. Final clean-ups and exit
+    */
+exit:
+
+#ifdef MBEDTLS_ERROR_C
+    if (ret != 0)
+    {
+        char error_buf[100];
+        mbedtls_strerror(ret, error_buf, 100);
+        mbedtls_printf("Last error was: %d - %s\n\n", ret, error_buf);
+    }
+#endif
+
     mbedtls_net_free(&server_fd);
+
     mbedtls_x509_crt_free(&cacert);
     mbedtls_ssl_free(&ssl);
     mbedtls_ssl_config_free(&conf);
