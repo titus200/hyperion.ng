@@ -176,7 +176,7 @@ void HueEntertainmentWorker::run()
 
 #define READ_TIMEOUT_MS 1000
 #define MAX_RETRY       5
-#define DEBUG_LEVEL 4
+#define DEBUG_LEVEL 1
 #define SERVER_PORT "2100"
 #define SERVER_NAME "Hue"
 
@@ -212,7 +212,7 @@ void HueEntertainmentWorker::run()
     mbedtls_ssl_config_init(&conf);
     mbedtls_x509_crt_init(&cacert);
     mbedtls_ctr_drbg_init(&ctr_drbg);
-    
+
     mbedtls_ssl_conf_dbg(&conf, my_debug, stdout);
 
     qDebug() << "Seeding the random number generator...";
