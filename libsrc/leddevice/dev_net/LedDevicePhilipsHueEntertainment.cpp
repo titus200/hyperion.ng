@@ -74,8 +74,8 @@ LedDevicePhilipsHueEntertainment::~LedDevicePhilipsHueEntertainment() {
     worker->terminate();
     worker->wait();
     delete worker;
-    switchOff();
     bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":false}}");
+    switchOff();
 }
 
 void LedDevicePhilipsHueEntertainment::newGroups(QMap<quint16, QJsonObject> map)
