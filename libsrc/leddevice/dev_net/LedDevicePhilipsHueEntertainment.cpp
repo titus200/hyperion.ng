@@ -136,10 +136,10 @@ int LedDevicePhilipsHueEntertainment::write(const std::vector <ColorRgb> &ledVal
         // Scale colors from [0, 255] to [0, 1] and convert to xy space.
         CiColor xy = CiColor::rgbToCiColor(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, lamp.getColorSpace());
 
-        if(xy != lamp.getColor()) {
+        //if(xy != lamp.getColor()) {
             // Remember last color.
-            lamp.setColor(xy, 1.0);
-        }
+        //    lamp.setColor(xy, 1.0);
+        //}
 
         // Next light id.
         idx++;

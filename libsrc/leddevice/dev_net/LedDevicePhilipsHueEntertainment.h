@@ -45,17 +45,17 @@ struct HueEntertainmentWorkerLock
 {
     HueEntertainmentWorkerLock(HueEntertainmentWorker* inThread)
     {
-        eThread = inThread;
-        eThread->eMutex.lock();
+        worker = inThread;
+        worker->eMutex.lock();
     }
 
     ~HueEntertainmentWorkerLock()
     {
-        eThread->eMutex.unlock();
+        worker->eMutex.unlock();
     }
 
 private:
-    HueEntertainmentWorker * eThread;
+    HueEntertainmentWorker * worker;
 };
 
 class LedDevicePhilipsHueEntertainment : public LedDevice
