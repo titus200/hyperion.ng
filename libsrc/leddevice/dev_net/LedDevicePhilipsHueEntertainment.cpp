@@ -60,7 +60,7 @@ LedDevicePhilipsHueEntertainment::LedDevicePhilipsHueEntertainment(const QJsonOb
 bool LedDevicePhilipsHueEntertainment::init(const QJsonObject &deviceConfig)
 {
     groupId = deviceConfig["groupId"].toInt();
-
+	
     // get light info from bridge
     bridge.bConnect();
 
@@ -70,10 +70,12 @@ bool LedDevicePhilipsHueEntertainment::init(const QJsonObject &deviceConfig)
 }
 
 LedDevicePhilipsHueEntertainment::~LedDevicePhilipsHueEntertainment() {
+    worker->stop();
     worker->terminate();
     worker->wait();
     delete worker;
     switchOff();
+    bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":false}}");
 }
 
 void LedDevicePhilipsHueEntertainment::newGroups(QMap<quint16, QJsonObject> map)
@@ -158,7 +160,13 @@ void LedDevicePhilipsHueEntertainment::stateChanged(bool newState)
 HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username, QString clientkey, std::vector<PhilipsHueLight>* lights): output(output),
                                                                                       username(username),
                                                                                       clientkey(clientkey),
+										      stopStream(false),
                                                                                       lights(lights) {
+}
+
+void HueEntertainmentWorker::stop()
+{
+    stopStream = true;
 }
 
 static void my_debug( void *ctx, int level,
@@ -239,6 +247,8 @@ void HueEntertainmentWorker::run()
         goto exit;
     }
 
+    if (stopStream)
+        goto exit;
 
     /*
     * 2. Setup stuff
@@ -287,6 +297,8 @@ void HueEntertainmentWorker::run()
     mbedtls_ssl_set_timer_cb(&ssl, &timer, mbedtls_timing_set_delay,
         mbedtls_timing_get_delay);
 
+    if (stopStream)
+        goto exit;
     /*
     * 4. Handshake
     */
@@ -316,6 +328,8 @@ void HueEntertainmentWorker::run()
 
     qDebug() << "Handshake successful. Connected!";
 
+    if (stopStream)
+        goto exit;
     /*
     * 6. Send messages repeatedly until we lose connection or are told to stop
     */
@@ -393,7 +407,12 @@ send_request:
         }
 
         //TODO: make this delay customizable?
-        QThread::msleep(30);
+        QThread::msleep(40);
+	
+	if (stopStream)
+        {
+            break;
+        }    
     }
 
     if (ret < 0)
