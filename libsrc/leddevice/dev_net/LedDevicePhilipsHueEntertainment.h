@@ -20,9 +20,10 @@ class HueEntertainmentWorker : public QThread
     Q_OBJECT;
 
 public:
-    HueEntertainmentWorker(QString output, QString username, QString clientkey, std::vector <PhilipsHueLight> *lights);
+    explicit HueEntertainmentWorker(QString output, QString username, QString clientkey, std::vector <PhilipsHueLight> *lights);
 
-    void run();
+    void run() override;
+    void stop();
 
 private:
     /// Output
@@ -31,11 +32,11 @@ private:
     QString username;
     /// Clientkey
     QString clientkey;
+    std::atomic<bool> stopStream;
     /// GroupId
     unsigned int groupId;
     /// Array to save the lamps.
     std::vector <PhilipsHueLight> *lights;
-
     QMutex eMutex;
 
     friend struct HueEntertainmentWorkerLock;
