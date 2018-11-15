@@ -356,7 +356,7 @@ void PhilipsHueLight::setColor(CiColor color, float brightnessFactor, bool isStr
 			{
 				set(QString("{ \"xy\": [%1, %2], \"bri\": %3 }").arg(color.x, 0, 'f', 4).arg(color.y, 0, 'f', 4).arg(bri));
 			}else{
-				Debug(log, QString("isStream: %4 { \"xy\": [%1, %2], \"bri\": %3 }").arg(color.x, 0, 'f', 4).arg(color.y, 0, 'f', 4).arg(bri).arg(isStream));
+				qDebug(QString("isStream: %4 { \"xy\": [%1, %2], \"bri\": %3 }").arg(color.x, 0, 'f', 4).arg(color.y, 0, 'f', 4).arg(bri).arg(isStream));
 			}
 		}
 	}
