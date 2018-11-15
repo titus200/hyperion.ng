@@ -37,6 +37,25 @@ private:
     std::vector <PhilipsHueLight> *lights;
 
     QMutex eMutex;
+
+    friend struct HueEntertainmentWorkerLock;
+};
+
+struct HueEntertainmentWorkerLock
+{
+    HueEntertainmentWorkerLock(HueEntertainmentWorker* inThread)
+    {
+        eThread = inThread;
+        eThread->eMutex.lock();
+    }
+
+    ~HueEntertainmentWorkerLock()
+    {
+        eThread->eMutex.unlock();
+    }
+
+private:
+    HueEntertainmentWorker * eThread;
 };
 
 class LedDevicePhilipsHueEntertainment : public LedDevice
