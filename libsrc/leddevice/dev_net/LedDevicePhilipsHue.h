@@ -194,7 +194,7 @@ public:
 	/// @param color the color to set
 	/// @param brightnessFactor the factor to apply to the CiColor#bri value
 	///
-	void setColor(CiColor color, float brightnessFactor = 1.0f);
+	void setColor(CiColor color, float brightnessFactor = 1.0f, bool isStream = false);
 	CiColor getColor() const;
 
 	///

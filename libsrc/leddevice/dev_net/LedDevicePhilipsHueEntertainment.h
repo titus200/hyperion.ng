@@ -9,11 +9,11 @@
 #include <QMutex>
 
 // Leddevice includes
-#include <leddevice/LedDevice.h>
+//#include <leddevice/LedDevice.h>
 
 // Mbedtls
-#include "mbedtls/net_sockets.h"
-#include "mbedtls/ssl.h"
+//#include "mbedtls/net_sockets.h"
+//#include "mbedtls/ssl.h"
 
 class HueEntertainmentWorker : public QThread
 {
