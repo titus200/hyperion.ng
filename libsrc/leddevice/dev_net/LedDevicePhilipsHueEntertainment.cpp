@@ -110,13 +110,14 @@ void LedDevicePhilipsHueEntertainment::newLights(QMap<quint16, QJsonObject> map)
     {
         // search user lightid inside map and create light if found
         lights.clear();
-        int idx = 0;
+        unsigned int ledidx = 0;
         for(const auto id : lightIds)
         {
             if (map.contains(id))
             {
 				QJsonObject exMap = map.value(id);
-				exMap.insert("index", idx);
+				exMap.insert("index", ledidx);
+                qDebug() << "ledidx:" << ledidx;
                 lights.push_back(PhilipsHueLight(_log, bridge, id, exMap));
 				
             }
@@ -124,7 +125,7 @@ void LedDevicePhilipsHueEntertainment::newLights(QMap<quint16, QJsonObject> map)
             {
                 Error(_log,"Light id %d isn't used on this bridge", id);
             }
-            idx++;
+            ledidx++;
         }
 
         bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":true}}");
