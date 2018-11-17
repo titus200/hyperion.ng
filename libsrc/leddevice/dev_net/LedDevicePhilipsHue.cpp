@@ -312,7 +312,9 @@ PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned
 	lightname = values["name"].toString().trimmed().replace("\"", "");
 	lightindex = values["index"].toString().trimmed().replace("\"", "");
 	Info(log,"Light ID %d (\"%s\", LED index \"%d\") created", id, lightname, lightindex);
-	qDebug() << values.toString();
+	QJsonDocument doc(values);
+	QByteArray bytes = doc.toJson();
+	qDebug() << bytes;
 }
 
 PhilipsHueLight::~PhilipsHueLight()
