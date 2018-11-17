@@ -354,10 +354,15 @@ void PhilipsHueLight::setTransitionTime(unsigned int transitionTime)
 
 void PhilipsHueLight::setColor(CiColor color, float brightnessFactor, bool isStream)
 {
+	const int bri = qRound(qMin(254.0f, brightnessFactor * qMax(1.0f, color.bri * 254.0f)));
+	QString c = QString("{ \"xy\": [%1, %2], \"bri\": %3 }").arg(color.x, 0, 'f', 4).arg(color.y, 0, 'f', 4).arg(bri);
 	if (this->color != color && !isStream)
 	{
-		const int bri = qRound(qMin(254.0f, brightnessFactor * qMax(1.0f, color.bri * 254.0f)));
-		set(QString("{ \"xy\": [%1, %2], \"bri\": %3 }").arg(color.x, 0, 'f', 4).arg(color.y, 0, 'f', 4).arg(bri));
+		set(c);
+	}
+	else
+	{
+		Debug(log, QSTRING_CSTR(c));
 	}
 	this->color = color;
 }
