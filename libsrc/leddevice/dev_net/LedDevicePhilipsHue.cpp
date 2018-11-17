@@ -209,7 +209,6 @@ void PhilipsHueBridge::resolveReply(QNetworkReply* reply)
 			map.clear();
 			for (int i = 0; i < keys.size(); ++i)
 			{
-				obj.insert(keys.at(i).toInt(),{'index': i});
 				map.insert(keys.at(i).toInt(), obj.take(keys.at(i)).toObject());
 			}
 			emit newLights(map);
@@ -426,11 +425,13 @@ void LedDevicePhilipsHue::newLights(QMap<quint16, QJsonObject> map)
 	{
 		// search user lightid inside map and create light if found
 		lights.clear();
+		unsigned int idx = 0;
 		for(const auto id : lightIds)
 		{
 			if (map.contains(id))
 			{
-				lights.push_back(PhilipsHueLight(_log, bridge, id, map.value(id)));
+				lights.push_back(PhilipsHueLight(_log, bridge, id, map.value(id).push_back(json::object_t::value_type("index", idx)));
+				idx++;
 			}
 			else
 			{
