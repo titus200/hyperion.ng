@@ -311,7 +311,7 @@ PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned
 	// Determine the model id.
 	lightname = values["name"].toString().trimmed().replace("\"", "");
 	lightindex = values["index"].toString().trimmed().replace("\"", "");
-	Info(log,"Light ID %d (\"%s\", LED index \"%d\") created", id, lightname.toStdString().c_str(), lightindex.toStdString().c_str());
+	Info(log,"Light ID %d (\"%s\", LED index \"%s\") created", id, lightname.toStdString().c_str(), lightindex.toStdString().c_str());
 }
 
 PhilipsHueLight::~PhilipsHueLight()
