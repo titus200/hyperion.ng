@@ -110,7 +110,7 @@ void LedDevicePhilipsHueEntertainment::newLights(QMap<quint16, QJsonObject> map)
     {
         // search user lightid inside map and create light if found
         lights.clear();
-        unsigned int ledidx = 0;
+        int ledidx = 0;
         for(const auto id : lightIds)
         {
             if (map.contains(id))
