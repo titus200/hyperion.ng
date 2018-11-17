@@ -151,6 +151,8 @@ private:
 	CiColor color;
 	/// The model id of the hue lamp which is used to determine the color space.
 	QString modelId;
+	QString lightname;
+	QString lightindex;
 	CiColorTriangle colorSpace;
 	/// The json string of the original state.
 	QString originalState;
