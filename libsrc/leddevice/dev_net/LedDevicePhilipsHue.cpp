@@ -6,6 +6,10 @@
 #include <QNetworkReply>
 #include <QDebug>
 
+#include <QCoreApplication>
+#include <QJsonObject>
+#include <QJsonDocument>
+
 bool operator ==(CiColor p1, CiColor p2)
 {
 	return (p1.x == p2.x) && (p1.y == p2.y) && (p1.bri == p2.bri);
@@ -310,7 +314,8 @@ PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned
 	}
 	// Determine the model id.
 	lightname = values["name"].toString().trimmed().replace("\"", "");
-	lightindex = values["index"].toInt();
+	lightindex = values["index"];
+	qDebug() << qPrintable(values);
 	Info(log,"Light ID %d (\"%s\", LED index \"%d\") created", id, lightname.toStdString().c_str(), lightindex);
 }
 
