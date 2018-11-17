@@ -26,6 +26,8 @@
 
 #include <string.h>
 #include <math.h>
+#include <vector>
+#include <algorithm>
 
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/debug.h"
@@ -88,9 +90,15 @@ void LedDevicePhilipsHueEntertainment::newGroups(QMap<quint16, QJsonObject> map)
             if(group.value("type") == "Entertainment")
             {
                 QJsonArray jsonLights = group.value("lights").toArray();
+                std::vector<int> ledIDs;
                 for(const auto id: jsonLights)
                 {
-                    lightIds.push_back(id.toString().toInt());
+                    ledIDs.push_back(id.toString().toInt());
+                }
+                std::sort(ledIDs.begin(),ledIDs.end());
+                for(const auto ledID: ledIDs)
+                {
+                    lightIds.push_back(ledID);
                 }
             }
             else
