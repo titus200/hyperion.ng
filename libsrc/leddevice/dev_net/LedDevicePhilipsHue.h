@@ -146,13 +146,13 @@ private:
 	PhilipsHueBridge& bridge;
 	/// light id
 	unsigned int id;
+	unsigned int ledidx;
 	bool on;
 	unsigned int transitionTime;
 	CiColor color;
 	/// The model id of the hue lamp which is used to determine the color space.
 	QString modelId;
 	QString lightname;
-	QString lightindex;
 	CiColorTriangle colorSpace;
 	/// The json string of the original state.
 	QString originalState;
@@ -178,7 +178,7 @@ public:
 	/// @param bridge the bridge
 	/// @param id the light id
 	///
-	PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned int id, QJsonObject values);
+	PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned int id, QJsonObject values, unsigned int ledidx);
 	~PhilipsHueLight();
 
 	int getId() const;

@@ -241,7 +241,7 @@ const std::set<QString> PhilipsHueLight::GAMUT_B_MODEL_IDS =
 const std::set<QString> PhilipsHueLight::GAMUT_C_MODEL_IDS =
 { "LLC020", "LST002", "LCT011", "LCT012", "LCT010", "LCT014", "LCT015", "LCT016", "LCT024" };
 
-PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned int id, QJsonObject values)
+PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned int id, QJsonObject values, unsigned int ledidx)
 	: log(log)
 	, bridge(bridge)
 	, id(id)
@@ -314,9 +314,7 @@ PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned
 	}
 	// Determine the model id.
 	lightname = values["name"].toString().trimmed().replace("\"", "");
-	lightindex = values["index"];
-	qDebug() << qPrintable(values);
-	Info(log,"Light ID %d (\"%s\", LED index \"%d\") created", id, lightname.toStdString().c_str(), lightindex);
+	Info(log,"Light ID %d (\"%s\", LED index \"%d\") created", id, lightname.toStdString().c_str(), ledidx);
 }
 
 PhilipsHueLight::~PhilipsHueLight()
@@ -435,9 +433,7 @@ void LedDevicePhilipsHue::newLights(QMap<quint16, QJsonObject> map)
 		{
 			if (map.contains(id))
 			{
-				QJsonObject exMap = map.value(id);
-				exMap["index"] = ledidx;
-                lights.push_back(PhilipsHueLight(_log, bridge, id, exMap));
+                lights.push_back(PhilipsHueLight(_log, bridge, id, map.value(id), ledidx));
 			}
 			else
 			{
