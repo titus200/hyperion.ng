@@ -116,14 +116,15 @@ void LedDevicePhilipsHueEntertainment::newLights(QMap<quint16, QJsonObject> map)
             if (map.contains(id))
             {
 				QJsonObject exMap = map.value(id);
-				exMap.insert("index", idx)
+				exMap.insert("index", idx);
                 lights.push_back(PhilipsHueLight(_log, bridge, id, exMap));
-				idx++;
+				
             }
             else
             {
                 Error(_log,"Light id %d isn't used on this bridge", id);
             }
+            idx++;
         }
 
         bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":true}}");
