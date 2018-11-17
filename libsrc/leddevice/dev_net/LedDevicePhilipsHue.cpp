@@ -311,6 +311,7 @@ PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned
 	// Determine the model id.
 	lightname = values["name"].toString().trimmed().replace("\"", "");
 	lightindex = values["index"].toInt();
+	qDebug() << qPrintable(values);
 	Info(log,"Light ID %d (\"%s\", LED index \"%d\") created", id, lightname.toStdString().c_str(), lightindex);
 }
 
@@ -431,7 +432,7 @@ void LedDevicePhilipsHue::newLights(QMap<quint16, QJsonObject> map)
 			if (map.contains(id))
 			{
 				QJsonObject exMap = map.value(id);
-				exMap.insert("index", ledidx);
+				exMap.["index"] = ledidx;
                 lights.push_back(PhilipsHueLight(_log, bridge, id, exMap));
 			}
 			else

@@ -116,7 +116,7 @@ void LedDevicePhilipsHueEntertainment::newLights(QMap<quint16, QJsonObject> map)
             if (map.contains(id))
             {
 				QJsonObject exMap = map.value(id);
-				exMap.insert("index", ledidx);
+				exMap.["index"] = ledidx;
                 lights.push_back(PhilipsHueLight(_log, bridge, id, exMap));
 				
             }
