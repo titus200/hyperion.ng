@@ -209,6 +209,7 @@ void PhilipsHueBridge::resolveReply(QNetworkReply* reply)
 			map.clear();
 			for (int i = 0; i < keys.size(); ++i)
 			{
+				obj.insert(keys.at(i).toInt(),{'index': i});
 				map.insert(keys.at(i).toInt(), obj.take(keys.at(i)).toObject());
 			}
 			emit newLights(map);
@@ -308,8 +309,10 @@ PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned
 		colorSpace.blue =
 		{	0.0f, 0.0f};
 	}
-
-	Info(log,"Light ID %d created", id);
+	// Determine the model id.
+	lightname = values["name"].toString().trimmed().replace("\"", "");
+	lightindex = values["index"].toString().trimmed().replace("\"", "");
+	Info(log,"Light ID %d (\"%s\", LED index \"%s\") created", id, lightname, lightindex);
 }
 
 PhilipsHueLight::~PhilipsHueLight()
