@@ -159,7 +159,8 @@ void LedDevicePhilipsHueEntertainment::stateChanged(bool newState)
     if(newState) {
         bridge.bConnect();
     } else {
-        lights.clear();
+	lights.clear();
+	lightIds.clear();
 	worker->stop();
 	while (worker->isRunning()) {
 	   QThread::msleep(100);
