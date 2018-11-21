@@ -73,9 +73,9 @@ bool LedDevicePhilipsHueEntertainment::init(const QJsonObject &deviceConfig)
 
 LedDevicePhilipsHueEntertainment::~LedDevicePhilipsHueEntertainment() {
     worker->stop();
-    worker->terminate();
-    worker->wait();
-    delete worker;
+    while (worker->isRunning()) {
+ 	QThread::msleep(100);
+    }
     bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":false}}");
     switchOff();
 }
@@ -90,16 +90,11 @@ void LedDevicePhilipsHueEntertainment::newGroups(QMap<quint16, QJsonObject> map)
             if(group.value("type") == "Entertainment")
             {
                 QJsonArray jsonLights = group.value("lights").toArray();
-                std::vector<int> ledIDs;
                 for(const auto id: jsonLights)
                 {
-                    ledIDs.push_back(id.toString().toInt());
+                    lightIds.push_back(id.toString().toInt());
                 }
-                std::sort(ledIDs.begin(),ledIDs.end());
-                for(const auto ledID: ledIDs)
-                {
-                    lightIds.push_back(ledID);
-                }
+	        std::sort(lightIds.begin(),lightIds.end());
             }
             else
             {
@@ -161,10 +156,17 @@ int LedDevicePhilipsHueEntertainment::write(const std::vector <ColorRgb> &ledVal
 
 void LedDevicePhilipsHueEntertainment::stateChanged(bool newState)
 {
-    if(newState)
+    if(newState) {
         bridge.bConnect();
-    else
+    } else {
         lights.clear();
+	worker->stop();
+	while (worker->isRunning()) {
+	   QThread::msleep(100);
+	}
+	bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":false}}");
+	switchOff();
+    }
 }
 
 HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username, QString clientkey, std::vector<PhilipsHueLight>* lights): output(output),
@@ -362,7 +364,7 @@ send_request:
 
         static const uint8_t PAYLOAD_PER_LIGHT[] =
         {
-            0x01, 0x00, 0x06, //light ID
+            0x01, 0x00, 0x02, //light ID
 
                               //color: 16 bpc
                               0xff, 0xff,
@@ -381,12 +383,6 @@ send_request:
         Msg.reserve(sizeof(HEADER) + sizeof(PAYLOAD_PER_LIGHT) * lights->size());
 
         Msg.append((char*)HEADER, sizeof(HEADER));
-
-		//static QElapsedTimer timer;
-		//double deltaTime = timer.restart() / 1000.0;
-		//if (deltaTime > 1.0 || deltaTime <= 0.0 || std::isnan(deltaTime)) {
-		//	deltaTime = 1.0;
-		//}
 
         for (const PhilipsHueLight& lamp : *lights) {
             quint64 R = lamp.getColor().x * 0xffff;
@@ -416,7 +412,6 @@ send_request:
             break;
         }
 
-        //TODO: make this delay customizable?
         QThread::msleep(40);
 	
 	if (stopStream)
@@ -480,4 +475,6 @@ exit:
     mbedtls_ssl_config_free(&conf);
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_entropy_free(&entropy);
+	
+    stopStream = false;
 }
