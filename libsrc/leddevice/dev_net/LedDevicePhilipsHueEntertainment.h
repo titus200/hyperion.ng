@@ -23,7 +23,7 @@ public:
     explicit HueEntertainmentWorker(QString output, QString username, QString clientkey, std::vector <PhilipsHueLight> *lights);
 
     void run() override;
-    void stop();
+    void stopStreaming();
 
 private:
     /// Output
@@ -39,9 +39,10 @@ private:
     std::vector <PhilipsHueLight> *lights;
     QMutex eMutex;
 
-    friend struct HueEntertainmentWorkerLock;
+    //friend struct HueEntertainmentWorkerLock;
 };
 
+/*
 struct HueEntertainmentWorkerLock
 {
     HueEntertainmentWorkerLock(HueEntertainmentWorker* inThread)
@@ -58,6 +59,7 @@ struct HueEntertainmentWorkerLock
 private:
     HueEntertainmentWorker * worker;
 };
+*/
 
 class LedDevicePhilipsHueEntertainment : public LedDevice
 {
@@ -66,6 +68,8 @@ class LedDevicePhilipsHueEntertainment : public LedDevice
 private:
     /// bridge class
     PhilipsHueBridge bridge;
+    virtual int switchOn();
+    virtual int switchOff();
 
 public:
     LedDevicePhilipsHueEntertainment(const QJsonObject &deviceConfig);
@@ -90,11 +94,8 @@ private slots:
 
     void stateChanged(bool newState);
 
-protected:
-    QString username;
 
-    /// Clientkey
-    QString clientkey;
+protected:
     unsigned int groupId;
     /// Array to save the lamps.
     std::vector <PhilipsHueLight> lights;
@@ -113,4 +114,15 @@ protected:
     bool init(const QJsonObject &deviceConfig);
 
     std::vector<unsigned int> lightIds;
+
+   	/// The brightness factor to multiply on color change.
+	double brightnessFactor;
+   	double brightnessMin;
+	double brightnessMax;
+
+    void startStreaming();
+    QString bUsername;
+    /// Clientkey
+    QString bClientkey;
+    QString bOutput;
 };

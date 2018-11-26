@@ -19,11 +19,11 @@ struct CiColorTriangle;
 struct CiColor
 {
 	/// X component.
-	float x;
+	double x;
 	/// Y component.
-	float y;
+	double y;
 	/// The brightness.
-	float bri;
+	double bri;
 
 	///
 	/// Converts an RGB color to the Hue xy color space and brightness.
@@ -37,7 +37,7 @@ struct CiColor
 	///
 	/// @return color point
 	///
-	static CiColor rgbToCiColor(float red, float green, float blue, CiColorTriangle colorSpace);
+	static CiColor rgbToCiColor(double red, double green, double blue, CiColorTriangle colorSpace);
 
 	///
 	/// @param p the color point to check
@@ -53,7 +53,7 @@ struct CiColor
 	///
 	/// @return the cross product between p1 and p2
 	///
-	static float crossProduct(CiColor p1, CiColor p2);
+	static double crossProduct(CiColor p1, CiColor p2);
 
 	///
 	/// @param a reference point one
@@ -73,7 +73,7 @@ struct CiColor
 	///
 	/// @return the distance between the two points
 	///
-	static float getDistanceBetweenTwoPoints(CiColor p1, CiColor p2);
+	static double getDistanceBetweenTwoPoints(CiColor p1, CiColor p2);
 };
 
 bool operator==(CiColor p1, CiColor p2);
@@ -196,7 +196,7 @@ public:
 	/// @param color the color to set
 	/// @param brightnessFactor the factor to apply to the CiColor#bri value
 	///
-	void setColor(CiColor color, float brightnessFactor = 1.0f, bool isStream = false);
+	void setColor(CiColor color, double brightnessFactor = 1.0f, double brightnessMin = 0.01f, double brightnessMax = 1.0f, bool isStream = false);
 	CiColor getColor() const;
 
 	///
@@ -261,7 +261,9 @@ private:
 	///
 	bool switchOffOnBlack;
 	/// The brightness factor to multiply on color change.
-	float brightnessFactor;
+	double brightnessFactor;
+	double brightnessMin;
+	double brightnessMax;
 	/// Transition time in multiples of 100 ms.
 	/// The default of the Hue lights is 400 ms, but we may want it snapier.
 	int transitionTime;

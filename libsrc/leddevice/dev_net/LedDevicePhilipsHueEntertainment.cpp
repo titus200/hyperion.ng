@@ -45,39 +45,66 @@ LedDevice* LedDevicePhilipsHueEntertainment::construct(const QJsonObject &device
     return new LedDevicePhilipsHueEntertainment(deviceConfig);
 }
 
-LedDevicePhilipsHueEntertainment::LedDevicePhilipsHueEntertainment(const QJsonObject& deviceConfig)
+LedDevicePhilipsHueEntertainment::LedDevicePhilipsHueEntertainment(const QJsonObject &deviceConfig)
         : LedDevice()
         , bridge(_log, deviceConfig["output"].toString(), deviceConfig["username"].toString())
 {
     _deviceReady = init(deviceConfig);
-
+    
     connect(&bridge, &PhilipsHueBridge::newGroups, this, &LedDevicePhilipsHueEntertainment::newGroups);
     connect(&bridge, &PhilipsHueBridge::newLights, this, &LedDevicePhilipsHueEntertainment::newLights);
     connect(this, &LedDevice::enableStateChanged, this, &LedDevicePhilipsHueEntertainment::stateChanged);
 
-
-    worker = new HueEntertainmentWorker(deviceConfig["output"].toString(), deviceConfig["username"].toString(), deviceConfig["clientkey"].toString(), &lights);
 }
 
-bool LedDevicePhilipsHueEntertainment::init(const QJsonObject &deviceConfig)
-{
+bool LedDevicePhilipsHueEntertainment::init(const QJsonObject &deviceConfig) {
     groupId = deviceConfig["groupId"].toInt();
-	
+   	brightnessFactor = deviceConfig["brightnessFactor"].toDouble(1.0);
+	brightnessMin = deviceConfig["brightnessMin"].toDouble(1.0);
+	brightnessMax = deviceConfig["brightnessMax"].toDouble(1.0);
+
+    bOutput = deviceConfig["output"].toString();
+    bUsername = deviceConfig["username"].toString();
+    bClientkey = deviceConfig["clientkey"].toString();
+
+    qDebug() << "LedDevicePhilipsHueEntertainment brightnessFactor set to " << brightnessFactor;
+    qDebug() << "LedDevicePhilipsHueEntertainment brightnessMin set to " << brightnessMin;
+    qDebug() << "LedDevicePhilipsHueEntertainment brightnessMax set to " << brightnessMax;
+
     // get light info from bridge
     bridge.bConnect();
 
     LedDevice::init(deviceConfig);
-
     return true;
 }
 
 LedDevicePhilipsHueEntertainment::~LedDevicePhilipsHueEntertainment() {
-    worker->stop();
-    while (worker->isRunning()) {
- 	QThread::msleep(100);
-    }
-    bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":false}}");
+    worker->stopStreaming();
+    worker->quit();
+    //worker->terminate();
+    worker->wait();
+    delete worker;
     switchOff();
+}
+
+void LedDevicePhilipsHueEntertainment::startStreaming() {
+    switchOff();
+    qDebug() << "LedDevicePhilipsHueEntertainment startStreaming";
+    switchOn();
+    worker = new HueEntertainmentWorker(bOutput, bUsername, bClientkey, &lights);
+    worker->start();
+}
+
+int LedDevicePhilipsHueEntertainment::switchOff() {
+    qDebug() << "LedDevicePhilipsHueEntertainment switchOff";
+    bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":false}}");
+    return 0;
+}
+
+int LedDevicePhilipsHueEntertainment::switchOn() {
+    qDebug() << "LedDevicePhilipsHueEntertainment switchOn";
+    bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":true}}");
+    return 0;
 }
 
 void LedDevicePhilipsHueEntertainment::newGroups(QMap<quint16, QJsonObject> map)
@@ -94,7 +121,7 @@ void LedDevicePhilipsHueEntertainment::newGroups(QMap<quint16, QJsonObject> map)
                 {
                     lightIds.push_back(id.toString().toInt());
                 }
-	        std::sort(lightIds.begin(),lightIds.end());
+                std::sort(lightIds.begin(),lightIds.end());
             }
             else
             {
@@ -126,9 +153,7 @@ void LedDevicePhilipsHueEntertainment::newLights(QMap<quint16, QJsonObject> map)
             }
             ledidx++;
         }
-
-        bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":true}}");
-        worker->start();
+        startStreaming();
     }
 }
 
@@ -141,13 +166,15 @@ int LedDevicePhilipsHueEntertainment::write(const std::vector <ColorRgb> &ledVal
         // Get lamp.
         PhilipsHueLight& lamp = lights.at(idx);
         // Scale colors from [0, 255] to [0, 1] and convert to xy space.
-        CiColor xy = CiColor::rgbToCiColor(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, lamp.getColorSpace());
-
+		//qDebug() << "red: " << color.red << ", green: " << color.green << ", blue: " << color.blue;
+		//qDebug() << "red / 255.0f: " << ( color.red / 255.0f )<< ", green / 255.0f: " << ( color.green / 255.0f ) << ", blue / 255.0f: " << ( color.blue / 255.0f );
+		// Scale colors from [0, 255] to [0, 1] and convert to xy space.
+		CiColor xy = CiColor::rgbToCiColor(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, lamp.getColorSpace());
+        //qDebug() << "x: " << xy.x << ", y: " << xy.y << ", bri: " << xy.bri;
         if(xy != lamp.getColor()) {
             // Remember last color.
-            lamp.setColor(xy, 1.0, true);
+            lamp.setColor(xy, brightnessFactor, brightnessMin, brightnessMax, true);
         }
-
         // Next light id.
         idx++;
     }
@@ -156,40 +183,44 @@ int LedDevicePhilipsHueEntertainment::write(const std::vector <ColorRgb> &ledVal
 
 void LedDevicePhilipsHueEntertainment::stateChanged(bool newState)
 {
+    qDebug() << "LedDevicePhilipsHueEntertainment -> stateChanged: " << newState;
+
     if(newState) {
-        bridge.bConnect();
+        if(lights.empty() || lightIds.empty()) {
+            qDebug() << "LedDevicePhilipsHueEntertainment -> stateChanged -> bConnect";
+            bridge.bConnect();
+        }else{
+            qDebug() << "LedDevicePhilipsHueEntertainment -> stateChanged -> startStreaming";
+            startStreaming();
+        }
     } else {
-	lights.clear();
-	lightIds.clear();
-	worker->stop();
-	while (worker->isRunning()) {
-	   QThread::msleep(100);
-	}
-	bridge.post(QString("groups/%1").arg(groupId), "{\"stream\":{\"active\":false}}");
-	switchOff();
+        qDebug() << "LedDevicePhilipsHueEntertainment -> stateChanged -> stopStreaming";
+        worker->stopStreaming();
+        worker->quit();
+        worker->wait();
+        switchOff();
     }
 }
 
-HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username, QString clientkey, std::vector<PhilipsHueLight>* lights): output(output),
-                                                                                      username(username),
-                                                                                      clientkey(clientkey),
-										      stopStream(false),
-                                                                                      lights(lights) {
+HueEntertainmentWorker::HueEntertainmentWorker(QString output, QString username, QString clientkey, std::vector<PhilipsHueLight>* lights): 
+                                                output(output),
+                                                username(username),
+                                                clientkey(clientkey),
+                                                stopStream(false),
+                                                lights(lights) {
 }
 
-void HueEntertainmentWorker::stop()
+void HueEntertainmentWorker::stopStreaming()
 {
+    qDebug() << "HueEntertainmentWorker -> stopStreaming";
     stopStream = true;
 }
 
-static void my_debug( void *ctx, int level,
-                      const char *file, int line,
-                      const char *str )
+static void HueEntertainmentWorker_debug( void *ctx, int level, const char *file, int line, const char *str )
 {
     ((void) level);
-
     mbedtls_fprintf( (FILE *) ctx, "%s:%04d: %s", file, line, str );
-    fflush(  (FILE *) ctx  );
+    //fflush(  (FILE *) ctx  );
 }
 
 void HueEntertainmentWorker::run()
@@ -234,7 +265,7 @@ void HueEntertainmentWorker::run()
     mbedtls_x509_crt_init(&cacert);
     mbedtls_ctr_drbg_init(&ctr_drbg);
 
-    mbedtls_ssl_conf_dbg(&conf, my_debug, stdout);
+    mbedtls_ssl_conf_dbg(&conf, HueEntertainmentWorker_debug, stdout);
 
     qDebug() << "Seeding the random number generator...";
 
@@ -405,8 +436,7 @@ send_request:
         int len = Msg.size();
 
         do ret = mbedtls_ssl_write(&ssl, (unsigned char *)Msg.data(), len);
-        while (ret == MBEDTLS_ERR_SSL_WANT_READ ||
-            ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+        while (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
 
         if (ret < 0)
         {
@@ -460,6 +490,8 @@ close_notify:
     */
 exit:
 
+    qDebug() << "Exit Section...";
+
 #ifdef MBEDTLS_ERROR_C
     if (ret != 0)
     {
@@ -476,6 +508,4 @@ exit:
     mbedtls_ssl_config_free(&conf);
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_entropy_free(&entropy);
-	
-    stopStream = false;
 }

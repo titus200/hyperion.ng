@@ -20,22 +20,23 @@ bool operator !=(CiColor p1, CiColor p2)
 	return !(p1 == p2);
 }
 
-CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangle colorSpace)
+CiColor CiColor::rgbToCiColor(double red, double green, double blue, CiColorTriangle colorSpace)
 {
 	// Apply gamma correction.
-	float r = (red > 0.04045f) ? powf((red + 0.055f) / (1.0f + 0.055f), 2.4f) : (red / 12.92f);
-	float g = (green > 0.04045f) ? powf((green + 0.055f) / (1.0f + 0.055f), 2.4f) : (green / 12.92f);
-	float b = (blue > 0.04045f) ? powf((blue + 0.055f) / (1.0f + 0.055f), 2.4f) : (blue / 12.92f);
+	double r = (red > 0.04045f) ? pow((red + 0.055f) / (1.0f + 0.055f), 2.4f) : (red / 12.92f);
+	double g = (green > 0.04045f) ? pow((green + 0.055f) / (1.0f + 0.055f), 2.4f) : (green / 12.92f);
+	double b = (blue > 0.04045f) ? pow((blue + 0.055f) / (1.0f + 0.055f), 2.4f) : (blue / 12.92f);
 	// Convert to XYZ space.
-	float X = r * 0.664511f + g * 0.154324f + b * 0.162028f;
-	float Y = r * 0.283881f + g * 0.668433f + b * 0.047685f;
-	float Z = r * 0.000088f + g * 0.072310f + b * 0.986039f;
+	//qDebug() << "r: " << r << ", g: " << g << ", b: " << b;
 
-	float bri = fmax(fmax(r, g), b);
+	double X = r * 0.664511f + g * 0.154324f + b * 0.162028f;
+	double Y = r * 0.283881f + g * 0.668433f + b * 0.047685f;
+	double Z = r * 0.000088f + g * 0.072310f + b * 0.986039f;
 
 	// Convert to x,y space.
-	float cx = X / (X + Y + Z);
-	float cy = Y / (X + Y + Z);
+	double cx = X / (X + Y + Z);
+	double cy = Y / (X + Y + Z);
+
 	if (std::isnan(cx))
 	{
 		cx = 0.0f;
@@ -44,8 +45,11 @@ CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangl
 	{
 		cy = 0.0f;
 	}
-	// RGB to HSV Convertion for Brightness Value, not XYZ Space.
-	//float bri = fmax(fmax(red, green), blue);
+
+	// RGB to HSV/B Conversion before gamma correction V/B for brightness, not Y from XYZ Space.
+	//double bri = std::max(std::max(red, green), blue);
+	// RGB to HSV/B Conversion after gamma correction V/B for brightness, not Y from XYZ Space.
+	double bri = std::max(r, std::max(g, b));
 
 	CiColor xy =
 	{ cx, cy, bri };
@@ -57,10 +61,10 @@ CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangl
 		CiColor pAC = getClosestPointToPoint(colorSpace.blue, colorSpace.red, xy);
 		CiColor pBC = getClosestPointToPoint(colorSpace.green, colorSpace.blue, xy);
 		// Get the distances per point and see which point is closer to our Point.
-		float dAB = getDistanceBetweenTwoPoints(xy, pAB);
-		float dAC = getDistanceBetweenTwoPoints(xy, pAC);
-		float dBC = getDistanceBetweenTwoPoints(xy, pBC);
-		float lowest = dAB;
+		double dAB = getDistanceBetweenTwoPoints(xy, pAB);
+		double dAC = getDistanceBetweenTwoPoints(xy, pAC);
+		double dBC = getDistanceBetweenTwoPoints(xy, pBC);
+		double lowest = dAB;
 		CiColor closestPoint = pAB;
 		if (dAC < lowest)
 		{
@@ -79,7 +83,7 @@ CiColor CiColor::rgbToCiColor(float red, float green, float blue, CiColorTriangl
 	return xy;
 }
 
-float CiColor::crossProduct(CiColor p1, CiColor p2)
+double CiColor::crossProduct(CiColor p1, CiColor p2)
 {
 	return p1.x * p2.y - p1.y * p2.x;
 }
@@ -92,8 +96,8 @@ bool CiColor::isPointInLampsReach(CiColor p, CiColorTriangle colorSpace)
 	{ colorSpace.blue.x - colorSpace.red.x, colorSpace.blue.y - colorSpace.red.y };
 	CiColor q =
 	{ p.x - colorSpace.red.x, p.y - colorSpace.red.y };
-	float s = crossProduct(q, v2) / crossProduct(v1, v2);
-	float t = crossProduct(v1, q) / crossProduct(v1, v2);
+	double s = crossProduct(q, v2) / crossProduct(v1, v2);
+	double t = crossProduct(v1, q) / crossProduct(v1, v2);
 	if ((s >= 0.0f) && (t >= 0.0f) && (s + t <= 1.0f))
 	{
 		return true;
@@ -107,9 +111,9 @@ CiColor CiColor::getClosestPointToPoint(CiColor a, CiColor b, CiColor p)
 	{ p.x - a.x, p.y - a.y };
 	CiColor AB =
 	{ b.x - a.x, b.y - a.y };
-	float ab2 = AB.x * AB.x + AB.y * AB.y;
-	float ap_ab = AP.x * AB.x + AP.y * AB.y;
-	float t = ap_ab / ab2;
+	double ab2 = AB.x * AB.x + AB.y * AB.y;
+	double ap_ab = AP.x * AB.x + AP.y * AB.y;
+	double t = ap_ab / ab2;
 	if (t < 0.0f)
 	{
 		t = 0.0f;
@@ -122,12 +126,12 @@ CiColor CiColor::getClosestPointToPoint(CiColor a, CiColor b, CiColor p)
 	{	a.x + AB.x * t, a.y + AB.y * t};
 }
 
-float CiColor::getDistanceBetweenTwoPoints(CiColor p1, CiColor p2)
+double CiColor::getDistanceBetweenTwoPoints(CiColor p1, CiColor p2)
 {
 	// Horizontal difference.
-	float dx = p1.x - p2.x;
+	double dx = p1.x - p2.x;
 	// Vertical difference.
-	float dy = p1.y - p2.y;
+	double dy = p1.y - p2.y;
 	// Absolute value.
 	return sqrt(dx * dx + dy * dy);
 }
@@ -261,9 +265,9 @@ PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned
 		on = true;
 
 		color = {
-					(float) state["xy"].toArray()[0].toDouble(),
-					(float) state["xy"].toArray()[1].toDouble(),
-					(float) state["bri"].toDouble() / 255.0f
+					state["xy"].toArray()[0].toDouble(),
+					state["xy"].toArray()[1].toDouble(),
+					state["bri"].toDouble() / 255.0f
 				};
 		transitionTime = values["state"].toObject()["transitiontime"].toInt();
 	}
@@ -276,41 +280,41 @@ PhilipsHueLight::PhilipsHueLight(Logger* log, PhilipsHueBridge& bridge, unsigned
 	{
 		Debug(log, "Recognized model id %s of light ID %d as gamut A", modelId.toStdString().c_str(), id);
 		colorSpace.red =
-		{	0.703f, 0.296f};
+		{	0.704d, 0.296d};
 		colorSpace.green =
-		{	0.2151f, 0.7106f};
+		{	0.2151d, 0.7106d};
 		colorSpace.blue =
-		{	0.138f, 0.08f};
+		{	0.138d, 0.08d};
 	}
 	else if (GAMUT_B_MODEL_IDS.find(modelId) != GAMUT_B_MODEL_IDS.end())
 	{
 		Debug(log, "Recognized model id %s of light ID %d as gamut B", modelId.toStdString().c_str(), id);
 		colorSpace.red =
-		{	0.675f, 0.322f};
+		{	0.675d, 0.322d};
 		colorSpace.green =
-		{	0.409f, 0.518f};
+		{	0.409d, 0.518d};
 		colorSpace.blue =
-		{	0.167f, 0.04f};
+		{	0.167d, 0.04d};
 	}
 	else if (GAMUT_C_MODEL_IDS.find(modelId) != GAMUT_C_MODEL_IDS.end())
 	{
 		Debug(log, "Recognized model id %s of light ID %d as gamut C", modelId.toStdString().c_str(), id);
 		colorSpace.red =
-		{	0.6915f, 0.3083f};
+		{	0.6915d, 0.3083d};
 		colorSpace.green =
-		{	0.17f, 0.7f};
+		{	0.17d, 0.7d};
 		colorSpace.blue =
-		{	0.1532f, 0.0475f};
+		{	0.1532d, 0.0475d};
 	}
 	else
 	{
 		Warning(log, "Did not recognize model id %s of light ID %d", modelId.toStdString().c_str(), id);
 		colorSpace.red =
-		{	1.0f, 0.0f};
+		{	1.0d, 0.0d};
 		colorSpace.green =
-		{	0.0f, 1.0f};
+		{	0.0d, 1.0d};
 		colorSpace.blue =
-		{	0.0f, 0.0f};
+		{	0.0d, 0.0d};
 	}
 	// Determine the model id.
 	lightname = values["name"].toString().trimmed().replace("\"", "");
@@ -352,17 +356,25 @@ void PhilipsHueLight::setTransitionTime(unsigned int transitionTime)
 	this->transitionTime = transitionTime;
 }
 
-void PhilipsHueLight::setColor(CiColor color, float brightnessFactor, bool isStream)
+void PhilipsHueLight::setColor(CiColor color, double brightnessFactor, double brightnessMin, double brightnessMax, bool isStream)
 {
-	const int bri = qRound(qMin(254.0f, brightnessFactor * qMax(1.0f, color.bri * 254.0f)));
-	QString c = QString("{ \"xy\": [%1, %2], \"bri\": %3 }").arg(color.x, 0, 'f', 4).arg(color.y, 0, 'f', 4).arg(bri);
-	if (this->color != color && !isStream)
+	const int bri = qRound(qMin(254.0d, brightnessFactor * qMax(1.0d, color.bri * 254.0d)));
+	QString c = QString("{ \"xy\": [%1, %2], \"bri\": %3 }").arg(color.x, 0, 'd', 4).arg(color.y, 0, 'd', 4).arg(bri);
+	if (this->color != color)
 	{
-		set(c);
-	}
-	else
-	{
-		Debug(log, QSTRING_CSTR(c));
+		if(!isStream)
+		{
+			set(c);
+		} 
+		else 
+		{
+			if(brightnessMin < 0.0d) brightnessMin = 0.0d;
+			if(brightnessMax > 1.0d) brightnessMax = 1.0d;
+			//qDebug() << "brightess before:" << color.bri << " = " << (color.bri*255.0f);
+			color.bri = (std::min(brightnessMax, brightnessFactor * std::max(brightnessMin, (color.bri * 255.0d / 254.0d))));
+			//qDebug() << "brightess after:" << color.bri << " = " << (color.bri*254.0f);
+		}
+		//Debug(log, QSTRING_CSTR(c));
 	}
 	this->color = color;
 }
@@ -382,7 +394,7 @@ LedDevice* LedDevicePhilipsHue::construct(const QJsonObject &deviceConfig)
 	return new LedDevicePhilipsHue(deviceConfig);
 }
 
-LedDevicePhilipsHue::LedDevicePhilipsHue(const QJsonObject& deviceConfig)
+LedDevicePhilipsHue::LedDevicePhilipsHue(const QJsonObject &deviceConfig)
 	: LedDevice()
 	, bridge(_log, deviceConfig["output"].toString(), deviceConfig["username"].toString())
 {
@@ -400,13 +412,16 @@ LedDevicePhilipsHue::~LedDevicePhilipsHue()
 bool LedDevicePhilipsHue::init(const QJsonObject &deviceConfig)
 {
 	switchOffOnBlack = deviceConfig["switchOffOnBlack"].toBool(true);
-	brightnessFactor = (float) deviceConfig["brightnessFactor"].toDouble(1.0);
+	brightnessFactor = deviceConfig["brightnessFactor"].toDouble(1.0);
+	brightnessMin = deviceConfig["brightnessMin"].toDouble(1.0);
+	brightnessMax = deviceConfig["brightnessMax"].toDouble(1.0);
 	transitionTime = deviceConfig["transitiontime"].toInt(1);
 	QJsonArray lArray = deviceConfig["lightIds"].toArray();
 
 	QJsonObject newDC = deviceConfig;
 	if(!lArray.empty())
 	{
+		lightIds.clear();
 		for(const auto i : lArray)
 		{
 			lightIds.push_back(i.toInt());
@@ -469,8 +484,7 @@ int LedDevicePhilipsHue::write(const std::vector<ColorRgb> & ledValues)
 		ColorRgb color = ledValues.at(idx);
 
 		// Scale colors from [0, 255] to [0, 1] and convert to xy space.
-		CiColor xy = CiColor::rgbToCiColor(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f,
-				light.getColorSpace());
+		CiColor xy = CiColor::rgbToCiColor(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, light.getColorSpace());
 
 		if (switchOffOnBlack && xy.bri == 0)
 		{
@@ -482,7 +496,7 @@ int LedDevicePhilipsHue::write(const std::vector<ColorRgb> & ledValues)
 		}
 		// Write color if color has been changed.
 		light.setTransitionTime(transitionTime);
-		light.setColor(xy, brightnessFactor);
+		light.setColor(xy, brightnessFactor, brightnessMin, brightnessMax, false);
 
 		idx++;
 	}
