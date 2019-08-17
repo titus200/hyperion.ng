@@ -107,6 +107,9 @@ HyperionDaemon::HyperionDaemon(const QString rootPath, QObject *parent, const bo
 	// spawn all Hyperion instances (non blocking)
 	_instanceManager->startAll();
 
+	//Cleaning up Hyperion before quit
+	connect(parent, SIGNAL(aboutToQuit()), this, SLOT(freeObjects()));
+
 	//connect(_hyperion,SIGNAL(closing()),this,SLOT(freeObjects())); // TODO for app restart, refactor required
 
 	// pipe settings changes and component state changes from HyperionIManager to Daemon
@@ -138,7 +141,6 @@ HyperionDaemon::HyperionDaemon(const QString rootPath, QObject *parent, const bo
 
 HyperionDaemon::~HyperionDaemon()
 {
-	freeObjects();
 	delete _settingsManager;
 	delete _pyInit;
 }
@@ -159,6 +161,7 @@ const QJsonDocument HyperionDaemon::getSetting(const settings::type &type)
 
 void HyperionDaemon::freeObjects()
 {
+	Debug(_log, "aboutToQuit -> Cleaning up Hyperion before quit.");
 	// destroy network first as a client might want to access hyperion
 	delete _jsonServer;
 	_flatBufferServer->thread()->quit();
