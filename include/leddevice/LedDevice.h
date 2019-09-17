@@ -71,11 +71,19 @@ public slots:
 	///
 	/// Writes the RGB-Color values to the leds.
 	///
-	/// @param[in] ledValues  The RGB-color per led
+	/// @param[in] ledValues The RGB-color per led
 	///
 	/// @return Zero on success else negative
 	///
 	virtual int write(const std::vector<ColorRgb>& ledValues) = 0;
+	
+	///
+	/// PIPER slot for Priority Muxer -> LedDevice
+	///
+	/// @brief Handle priority updates from Priority Muxer
+	/// @param priority The new visible priority
+	///
+	void visiblePriorityChanged(const quint8 &priority);
 
 signals:
 	///
@@ -88,9 +96,9 @@ signals:
 	/// PIPER signal for Priority Muxer -> LedDevice
 	///
 	/// @brief Handle priority updates from Priority Muxer
-	/// @param  priority  The new visible priority
+	/// @param newState true / false
 	///
-	void visiblePriorityChanged(const quint8 &priority);
+	void activeStateChanged(bool newState);
 
 protected:
 	virtual bool init(const QJsonObject &deviceConfig);

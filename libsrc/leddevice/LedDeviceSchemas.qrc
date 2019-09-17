@@ -15,6 +15,7 @@
 		<file alias="schema-p9813">schemas/schema-p9813.json</file>
 		<file alias="schema-paintpack">schemas/schema-paintpack.json</file>
 		<file alias="schema-philipshue">schemas/schema-philipshue.json</file>
+		<file alias="schema-philipshueentertainment">schemas/schema-philipshueentertainment.json</file>
 		<file alias="schema-piblaster">schemas/schema-piblaster.json</file>
 		<file alias="schema-rawhid">schemas/schema-rawhid.json</file>
 		<file alias="schema-sedu">schemas/schema-sedu.json</file>

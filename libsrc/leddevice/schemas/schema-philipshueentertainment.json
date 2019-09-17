@@ -1,0 +1,88 @@
+{
+	"type":"object",
+	"required":true,
+	"properties":{
+		"output": {
+			"type": "string",
+			"title":"edt_dev_spec_targetIp_title",
+			"default":"",
+			"propertyOrder" : 1
+		},
+		"username": {
+			"type": "string",
+			"title":"edt_dev_spec_username_title",
+			"default": "",
+			"propertyOrder" : 2
+		},
+		"clientkey": {
+			"type": "string",
+			"title":"edt_dev_spec_clientKey_title",
+			"default" : "",
+			"propertyOrder" : 3
+		},
+		"groupId": {
+			"type": "integer",
+			"title":"edt_dev_spec_groupId_title",
+			"default" : 0,
+			"propertyOrder" : 4
+		},
+		"brightnessFactor": {
+			"type": "number",
+			"title":"edt_dev_spec_brightnessFactor_title",
+			"default" : 1.0,
+			"step": 0.25,
+			"minimum" : 0.5,
+			"maximum" : 10.0,
+			"access" : "advanced",
+			"propertyOrder" : 5
+		},
+		"brightnessMin": {
+			"type": "number",
+			"title":"edt_dev_spec_brightnessMin_title",
+			"default" : 0,
+			"step": 0.05,
+			"minimum" : 0,
+			"maximum" : 1.0,
+			"access" : "advanced",
+			"propertyOrder" : 6
+		},
+		"brightnessMax": {
+			"type": "number",
+			"title":"edt_dev_spec_brightnessMax_title",
+			"default" : 1.0,
+			"step": 0.05,
+			"minimum" : 0,
+			"maximum" : 1.0,
+			"access" : "advanced",
+			"propertyOrder" : 7
+		},
+		"logCommands": {
+			"type": "boolean",
+			"title":"edt_dev_spec_logCommands_title",
+			"default" : false,
+			"access" : "expert",
+			"propertyOrder" : 8
+		},
+		"debugStreamer": {
+			"type": "boolean",
+			"title":"edt_dev_spec_debugStreamer_title",
+			"default" : false,
+			"access" : "expert",
+			"propertyOrder" : 9
+		},
+		"debugLevel": {
+			"type": "integer",
+			"title":"edt_dev_spec_debugLevel_title",
+			"enum" : [0, 1, 2, 3, 4],
+			"default" : 0,
+			"options" : {
+				"enum_titles" : ["edt_conf_enum_dl_nodebug", "edt_conf_enum_dl_error", "edt_conf_enum_dl_statechange", "edt_conf_enum_dl_informational", "edt_conf_enum_dl_verbose"]
+			},
+			"minimum" : 0,
+			"maximum" : 4,
+			"access" : "expert",
+			"propertyOrder" : 10
+		}
+	},
+	"additionalProperties": true
+}

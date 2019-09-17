@@ -147,15 +147,19 @@ $(document).ready(function() {
 			//roundRect(ledsCanvasNodeCtx, led.h.min * canvas_width, led.v.min * canvas_height, (led.h.max-led.h.min) * canvas_width, (led.v.max-led.v.min) * canvas_height, 4, true, colors[idx])
 			//ledsCanvasNodeCtx.fillRect(led.h.min * canvas_width, led.v.min * canvas_height, (led.h.max-led.h.min) * canvas_width, (led.v.max-led.v.min) * canvas_height);
 
-			ledsCanvasNodeCtx.fillStyle = (useColor) ?  "rgba("+colors[cPos]+","+colors[cPos+1]+","+colors[cPos+2]+",0.9)"  : "hsl("+(idx*360/leds.length)+",100%,50%)";
+			ledsCanvasNodeCtx.fillStyle = (useColor) ?  "rgba("+colors[cPos]+","+colors[cPos+1]+","+colors[cPos+2]+",0.75)"  : "hsla("+(idx*360/leds.length)+",100%,50%,0.75)";
 			ledsCanvasNodeCtx.fill(twoDPaths[idx]);
 			ledsCanvasNodeCtx.stroke(twoDPaths[idx]);
 
 			if(toggleLedsNum)
 			{
-				ledsCanvasNodeCtx.fillStyle = "blue";
+				//ledsCanvasNodeCtx.shadowOffsetX = 1;
+				//ledsCanvasNodeCtx.shadowOffsetY = 1;
+				//ledsCanvasNodeCtx.shadowColor = "black";
+				//ledsCanvasNodeCtx.shadowBlur = 4;
+      				ledsCanvasNodeCtx.fillStyle = "white";
 				ledsCanvasNodeCtx.textAlign = "center";
-				ledsCanvasNodeCtx.fillText(idx, (led.h.min * canvas_width) + ( ((led.h.max-led.h.min) * canvas_width) / 2), (led.v.min * canvas_height) + ( ((led.v.max-led.v.min) * canvas_height) / 2));
+				ledsCanvasNodeCtx.fillText(((led.name) ? led.name : idx), (led.h.min * canvas_width) + ( ((led.h.max-led.h.min) * canvas_width) / 2), (led.v.min * canvas_height) + ( ((led.v.max-led.v.min) * canvas_height) / 2));
 			}
 
 			// increment colorsPosition

@@ -65,6 +65,10 @@
 				"options" : {
 					"enum_titles" : ["edt_conf_enum_rgb", "edt_conf_enum_bgr", "edt_conf_enum_rbg", "edt_conf_enum_brg", "edt_conf_enum_gbr", "edt_conf_enum_grb"]
 				}
+			},
+			"name":
+			{
+				"type": "string"
 			}
 		},
 		"additionalProperties" : false

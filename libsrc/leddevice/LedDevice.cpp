@@ -39,6 +39,13 @@ int LedDevice::open()
 	return 0;
 }
 
+void LedDevice::visiblePriorityChanged(const quint8& priority) 
+{
+	Debug(_log, "%s", QSTRING_CSTR(QString("priority: %1").arg(priority)));
+	bool newState = (priority < 255) ? true : false;
+	emit activeStateChanged(newState);
+}
+
 void LedDevice::setEnable(bool enable)
 {
 	// emit signal when state changed

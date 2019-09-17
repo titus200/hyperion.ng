@@ -39,12 +39,12 @@ function createLedPreview(leds, origin){
 	{
 		var led = leds[idx];
 		var led_id='ledc_'+[idx];
-		var bgcolor = "background-color:hsl("+(idx*360/leds.length)+",100%,50%);";
+		var bgcolor = "background-color:hsla("+(idx*360/leds.length)+",100%,50%,0.75);";
 		var pos = "left:"+(led.h.min * canvas_width)+"px;"+
 			"top:"+(led.v.min * canvas_height)+"px;"+
 			"width:"+((led.h.max-led.h.min) * (canvas_width-1))+"px;"+
 			"height:"+((led.v.max-led.v.min) * (canvas_height-1))+"px;";
-		leds_html += '<div id="'+led_id+'" class="led" style="'+bgcolor+pos+'" title="'+idx+'"><span id="'+led_id+'_num" class="led_prev_num">'+idx+'</span></div>';
+		leds_html += '<div id="'+led_id+'" class="led" style="'+bgcolor+pos+'" title="'+idx+'"><span id="'+led_id+'_num" class="led_prev_num">'+((led.name) ? led.name : idx)+'</span></div>';
 	}
 	$('#leds_preview').html(leds_html);
 	$('#ledc_0').css({"background-color":"black","z-index":"12"});
@@ -366,7 +366,7 @@ $(document).ready(function() {
 	});
 
 	// v4 of json schema with diff required assignment - remove when hyperion schema moved to v4
-	var ledschema = {"items":{"additionalProperties":false,"required":["h","v"],"properties":{"colorOrder":{"enum":["rgb","bgr","rbg","brg","gbr","grb"],"type":"string"},"h":{"additionalProperties":false,"properties":{"max":{"maximum":1,"minimum":0,"type":"number"},"min":{"maximum":1,"minimum":0,"type":"number"}},"type":"object"},"v":{"additionalProperties":false,"properties":{"max":{"maximum":1,"minimum":0,"type":"number"},"min":{"maximum":1,"minimum":0,"type":"number"}},"type":"object"}},"type":"object"},"type":"array"};
+	var ledschema = {"items":{"additionalProperties":false,"required":["h","v"],"properties":{"name":{"type":"string"},"colorOrder":{"enum":["rgb","bgr","rbg","brg","gbr","grb"],"type":"string"},"h":{"additionalProperties":false,"properties":{"max":{"maximum":1,"minimum":0,"type":"number"},"min":{"maximum":1,"minimum":0,"type":"number"}},"type":"object"},"v":{"additionalProperties":false,"properties":{"max":{"maximum":1,"minimum":0,"type":"number"},"min":{"maximum":1,"minimum":0,"type":"number"}},"type":"object"}},"type":"object"},"type":"array"};
 	//create jsonace editor
 	aceEdt = new JSONACEEditor(document.getElementById("aceedit"),{
 		mode: 'code',
@@ -412,9 +412,9 @@ $(document).ready(function() {
 	$("#leddevices").off().on("change", function() {
 		var generalOptions  = window.serverSchema.properties.device;
 
-		// Modified schema enty "hardwareLedCount" in generalOptions to minimum LedCount
-
-		var specificOptions = window.serverSchema.properties.alldevices[$(this).val()];
+		// Modified schema entry "hardwareLedCount" in generalOptions to minimum LedCount
+		var ledType = $(this).val();
+		var specificOptions = window.serverSchema.properties.alldevices[ledType];
 		conf_editor = createJsonEditor('editor_container', {
 			generalOptions : generalOptions,
 			specificOptions : specificOptions,
@@ -434,7 +434,7 @@ $(document).ready(function() {
 		{
 			var specificOptions_val = conf_editor.getEditor("root.specificOptions").getValue()
 			for(var key in specificOptions_val){
-					values_specific[key] = (key in window.serverConfig.device) ? window.serverConfig.device[key] : specificOptions_val[key];
+				values_specific[key] = (key in window.serverConfig.device) ? window.serverConfig.device[key] : specificOptions_val[key];
 			};
 
 			conf_editor.getEditor("root.specificOptions").setValue( values_specific );
@@ -444,15 +444,14 @@ $(document).ready(function() {
 		conf_editor.validate().length ? $('#btn_submit_controller').attr('disabled', true) : $('#btn_submit_controller').attr('disabled', false);
 
 		// led controller sepecific wizards
-		if($(this).val() == "philipshue")
+		$('#btn_wiz_holder').html("")
+		$('#btn_led_device_wiz').off();
+
+		if(ledType == "philipshue" || ledType == "philipshueentertainment")
 		{
-			createHint("wizard", $.i18n('wiz_hue_title'), "btn_wiz_holder","btn_led_device_wiz");
-			$('#btn_led_device_wiz').off().on('click',startWizardPhilipsHue);
-		}
-		else
-		{
-			$('#btn_wiz_holder').html("")
-			$('#btn_led_device_wiz').off();
+			var hue_title = (ledType == "philipshueentertainment") ? 'wiz_hue_e_title' : 'wiz_hue_title';
+			createHint("wizard", $.i18n(hue_title), "btn_wiz_holder","btn_led_device_wiz");
+			$('#btn_led_device_wiz').off().on('click',{ type: ledType },startWizardPhilipsHue);
 		}
 	});
 
@@ -461,7 +460,7 @@ $(document).ready(function() {
 	var devRPiSPI = ['apa102', 'apa104', 'ws2801', 'lpd6803', 'lpd8806', 'p9813', 'sk6812spi', 'sk6822spi', 'ws2812spi'];
 	var devRPiPWM = ['ws281x'];
 	var devRPiGPIO = ['piblaster'];
-	var devNET = ['atmoorb', 'fadecandy', 'philipshue', 'nanoleaf', 'tinkerforge', 'tpm2net', 'udpe131', 'udpartnet', 'udph801', 'udpraw'];
+	var devNET = ['atmoorb', 'fadecandy', 'philipshue', 'philipshueentertainment', 'nanoleaf', 'tinkerforge', 'tpm2net', 'udpe131', 'udpartnet', 'udph801', 'udpraw'];
 	var devUSB = ['adalight', 'dmx', 'atmo', 'hyperionusbasp', 'lightpack', 'multilightpack', 'paintpack', 'rawhid', 'sedu', 'tpm2', 'karate'];
 
 	var optArr = [[]];
