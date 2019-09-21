@@ -62,7 +62,7 @@ Hyperion::Hyperion(const quint8& instance)
 
 Hyperion::~Hyperion()
 {
-	
+
 }
 
 void Hyperion::start()
@@ -150,7 +150,7 @@ void Hyperion::start()
 
 void Hyperion::stop()
 {
-	freeObjects(false)
+	freeObjects(false);
 	emit finished();
 	thread()->wait();
 }
