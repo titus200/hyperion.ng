@@ -171,6 +171,7 @@ void HyperionDaemon::freeObjects()
 	_protoServer->thread()->quit();
 	_protoServer->thread()->wait(1000);
 	//ssdp before webserver
+	_ssdp->stopServer();
 	_ssdp->thread()->quit();
 	_ssdp->thread()->wait(1000);
 	_webserver->thread()->quit();
