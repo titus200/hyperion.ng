@@ -114,33 +114,10 @@ unsigned int getProcessIdsByProcessName(const char* processName, QStringList &li
 
 void signal_handler(const int signum)
 {
-//	SIGUSR1 and SIGUSR2 must be rewritten
-
-	// Hyperion Managment instance
-	HyperionIManager* _hyperion = HyperionIManager::getInstance();
-
 	if(signum == SIGCHLD)
 	{
 		// only quit when a registered child process is gone
 		// currently this feature is not active ...
-		return;
-	}
-	else if (signum == SIGUSR1)
-	{
-		if (_hyperion != nullptr)
-		{
-// 			_hyperion->setComponentState(hyperion::COMP_SMOOTHING, false);
-// 			_hyperion->setComponentState(hyperion::COMP_LEDDEVICE, false);
-		}
-		return;
-	}
-	else if (signum == SIGUSR2)
-	{
-		if (_hyperion != nullptr)
-		{
-// 			_hyperion->setComponentState(hyperion::COMP_LEDDEVICE, true);
-// 			_hyperion->setComponentState(hyperion::COMP_SMOOTHING, true);
-		}
 		return;
 	}
 

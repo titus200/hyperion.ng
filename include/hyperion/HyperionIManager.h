@@ -140,8 +140,9 @@ private slots:
 
 	///
 	/// @brief handle finished signal of Hyperion instances
+	/// @param instanceIndex the instance index
 	///
-	void handleFinished();
+	void handleFinished(const quint8 instanceIndex);
 
 private:
 	friend class HyperionDaemon;

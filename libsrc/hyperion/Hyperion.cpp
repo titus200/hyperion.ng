@@ -62,7 +62,8 @@ Hyperion::Hyperion(const quint8& instance)
 
 Hyperion::~Hyperion()
 {
-
+	freeObjects();
+	emit finished(_instIndex);
 }
 
 void Hyperion::start()
@@ -150,20 +151,14 @@ void Hyperion::start()
 
 void Hyperion::stop()
 {
-	freeObjects(false);
-	emit finished();
+	thread()->quit();
 	thread()->wait();
 }
 
-void Hyperion::freeObjects(bool emitCloseSignal)
+void Hyperion::freeObjects()
 {
 	// switch off all leds
 	clearall(true);
-
-	if (emitCloseSignal)
-	{
-		emit closing();
-	}
 
 	// delete components on exit of hyperion core
 	delete _boblightServer;

@@ -74,7 +74,7 @@ public:
 	///
 	/// free all alocated objects, should be called only from constructor or before restarting hyperion
 	///
-	void freeObjects(bool emitCloseSignal=false);
+	void freeObjects();
 
 	///
 	/// @brief Get a pointer to the effect engine
@@ -430,9 +430,10 @@ signals:
 	void rawLedColors(const std::vector<ColorRgb>& ledValues);
 
 	///
-	/// @brief Emits before thread quit is requested
+	/// @brief Emits when thread is finished
+	/// @param instanceIndex The instance index
 	///
-	void finished();
+	void finished(const quint8 instanceIndex);
 
 	///
 	/// @brief Emits after thread has been started

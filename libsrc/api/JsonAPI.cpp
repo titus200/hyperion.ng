@@ -895,7 +895,7 @@ void JsonAPI::handleConfigCommand(const QJsonObject& message, const QString& com
 	}
 	else if (subcommand == "reload")
 	{
-		_hyperion->freeObjects(true);
+		_hyperion->freeObjects();
 		Process::restartHyperion();
 		sendErrorReply("failed to restart hyperion", full_command, tan);
 	}

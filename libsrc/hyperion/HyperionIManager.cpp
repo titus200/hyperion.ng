@@ -69,8 +69,9 @@ bool HyperionIManager::startInstance(const quint8& inst, const bool& block)
 			// setup thread management
 			connect(hyperionThread, &QThread::started, hyperion, &Hyperion::start);
 			connect(hyperion, &Hyperion::started, this, &HyperionIManager::handleStarted);
-			connect(hyperion, &Hyperion::finished, this, &HyperionIManager::handleFinished);
-			connect(hyperion, &Hyperion::finished, hyperionThread, &QThread::quit, Qt::DirectConnection);
+			connect(hyperion, &Hyperion::finished, this, &HyperionIManager::handleFinished, Qt::DirectConnection);
+			connect(hyperionThread, &QThread::finished, hyperion, &QObject::deleteLater);
+			connect(hyperionThread, &QThread::finished, hyperionThread, &QThread::deleteLater);
 
 			// setup further connections
 			// from Hyperion
@@ -175,18 +176,15 @@ bool HyperionIManager::saveName(const quint8& inst, const QString& name)
 	return false;
 }
 
-void HyperionIManager::handleFinished()
+void HyperionIManager::handleFinished(const quint8 instanceIndex)
 {
-	Hyperion* hyperion = qobject_cast<Hyperion*>(sender());
-	const quint8 & instance = hyperion->getInstanceIndex();
+    const QString instanceName = _instanceTable->getNamebyIndex(instanceIndex);
 
-	Info(_log,"Hyperion instance '%s' has been stopped", QSTRING_CSTR(_instanceTable->getNamebyIndex(instance)));
+	Info(_log,"Hyperion instance '%s' has been stopped", QSTRING_CSTR(instanceName));
 
-	_runningInstances.remove(instance);
-	hyperion->deleteLater();
-	emit instanceStateChanged(H_STOPPED, instance);
+	_runningInstances.remove(instanceIndex);
+	emit instanceStateChanged(H_STOPPED, instanceIndex);
 	emit change();
-
 }
 
 void HyperionIManager::handleStarted()
